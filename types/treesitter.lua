@@ -11,7 +11,7 @@ function vim.treesitter.LanguageTree:add_child(lang) end
 -- Returns a map of language to child tree.
 function vim.treesitter.LanguageTree:children() end
 
--- Determines whether This goes down the tree to recursively check children.
+-- Determines whether {range} is contained in this language tree
 --- @param range any #A range, that is a `{ start_line, start_col,
 ---              end_line, end_col }` table.
 function vim.treesitter.LanguageTree:contains(range) end
@@ -40,13 +40,14 @@ function vim.treesitter.LanguageTree:included_regions() end
 -- Invalidates this parser and all its children
 function vim.treesitter.LanguageTree:invalidate(reload) end
 
--- Determines whether this tree is valid. If the tree is invalid, `parse()` must be called to get the an updated tree.
+-- Determines whether this tree is valid. If the tree is invalid,
+-- call `parse()` . This will return the updated tree.
 function vim.treesitter.LanguageTree:is_valid() end
 
 -- Gets the language of this tree node.
 function vim.treesitter.LanguageTree:lang() end
 
--- Gets the appropriate language that contains
+-- Gets the appropriate language that contains {range}
 --- @param range any #A text range, see |LanguageTree:contains|
 function vim.treesitter.LanguageTree:language_for_range(range) end
 
@@ -56,11 +57,20 @@ function vim.treesitter.LanguageTree:language_for_range(range) end
 -- should be created.
 function vim.treesitter.LanguageTree:parse() end
 
--- Registers callbacks for the parser
---- @param cbs any #An `nvim_buf_attach` -like table argument with the following keys : `on_bytes` : see `nvim_buf_attach` , but this will be called after the parsers callback. `on_changedtree` : a callback that will be called every time the
----             tree has syntactical changes. it will only be
----             passed one argument, that is a table of the ranges
----             (as node ranges) that changed. `on_child_added` : emitted when a child is added to the tree. `on_child_removed` : emitted when a child is removed from the tree.
+-- Registers callbacks for the parser.
+--- @param cbs any #table An |nvim_buf_attach()|-like table argument
+---             with the following keys :
+---             • `on_bytes` : see |nvim_buf_attach()|, but this will be
+---               called after the parsers callback.
+---             • `on_changedtree` : a callback that will be
+---               called every time the tree has syntactical
+---               changes. It will only be passed one argument,
+---               which is a table of the ranges (as node ranges)
+---               that changed.
+---             • `on_child_added` : emitted when a child is added
+---               to the tree.
+---             • `on_child_removed` : emitted when a child is
+---               removed from the tree.
 function vim.treesitter.LanguageTree:register_cbs(cbs) end
 
 -- Removes a child language from this tree.
@@ -113,6 +123,61 @@ function vim.treesitter.TSHighlighter:destroy() end
 --- @param lang any #A language used by the highlighter.
 function vim.treesitter.TSHighlighter:get_query(lang) end
 
+-- Adds a new directive to be used in queries
+--- @param name any #the name of the directive, without leading #
+--- @param handler any #the handler function to be used signature will
+---                be (match, pattern, bufnr, predicate)
+function vim.treesitter.add_directive(name, handler, force) end
+
+-- Adds a new predicate to be used in queries
+--- @param name any #the name of the predicate, without leading #
+--- @param handler any #the handler function to be used signature will
+---                be (match, pattern, bufnr, predicate)
+function vim.treesitter.add_predicate(name, handler, force) end
+
+-- Gets the text corresponding to a given node
+--- @param node any #the node
+--- @param source any #The buffer or string from which the node is
+---               extracted
+function vim.treesitter.get_node_text(node, source) end
+
+-- Gets the parser for this bufnr / ft combination.
+--- @param bufnr any #The buffer the parser should be tied to
+--- @param lang any #The filetype of this parser
+--- @param opts any #Options object to pass to the created language
+---              tree
+--- @return any #The parser
+function vim.treesitter.get_parser(bufnr, lang, opts) end
+
+-- Returns the runtime query {query_name} for {lang}.
+--- @param lang any #The language to use for the query
+--- @param query_name any #The name of the query (i.e. "highlights")
+--- @return any #The corresponding query, parsed.
+function vim.treesitter.get_query(lang, query_name) end
+
+-- Gets the list of files used to make up a query
+--- @param lang any #The language
+--- @param query_name any #The name of the query to load
+--- @param is_included any #Internal parameter, most of the time left
+---                    as `nil`
+function vim.treesitter.get_query_files(lang, query_name, is_included) end
+
+-- Gets a string parser
+--- @param str any #The string to parse
+--- @param lang any #The language of this string
+--- @param opts any #Options to pass to the created language tree
+function vim.treesitter.get_string_parser(str, lang, opts) end
+
+-- Inspects the provided language.
+--- @param lang any #The language.
+function vim.treesitter.inspect_language(lang) end
+
+--- @return any #The list of supported directives.
+function vim.treesitter.list_directives() end
+
+--- @return any #The list of supported predicates.
+function vim.treesitter.list_predicates() end
+
 -- Represents a single treesitter parser for a language. The
 -- language can contain child languages with in its range, hence
 -- the tree.
@@ -121,4 +186,27 @@ function vim.treesitter.TSHighlighter:get_query(lang) end
 --- @param lang any #The language this tree represents
 --- @param opts any #Options table
 function vim.treesitter.new(source, lang, opts) end
+
+-- Parse {query} as a string. (If the query is in a file, the
+-- caller should read the contents into a string before calling).
+--- @param lang any #string The language
+--- @param query any #string A string containing the query (s-expr
+---              syntax)
+--- @return any #The query
+function vim.treesitter.parse_query(lang, query) end
+
+-- Asserts that the provided language is installed, and
+-- optionally provide a path for the parser
+--- @param lang any #The language the parser should parse
+--- @param path any #Optional path the parser is located at
+--- @param silent any #Don't throw an error if language not found
+function vim.treesitter.require_language(lang, path, silent) end
+
+-- The explicitly set queries from
+-- |vim.treesitter.query.set_query()|.
+--- @param lang any #string: The language to use for the query
+--- @param query_name any #string: The name of the query (i.e.
+---                   "highlights")
+--- @param text any #string: The query text (unparsed).
+function vim.treesitter.set_query(lang, query_name, text) end
 
