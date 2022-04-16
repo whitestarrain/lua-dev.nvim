@@ -1,50 +1,56 @@
 --# selene: allow(unused_variable)
 ---@diagnostic disable: unused-local
 
--- The result is a Number, which is the number of display cells
--- 		String {expr} occupies on the screen when it starts at {col}
--- 		(first column is zero).  When {col} is omitted zero is used.
--- 		Otherwise it is the screen column where to start.  This
--- 		matters for Tab characters.
--- 		The option settings of the current window are used.  This
--- 		matters for anything that's displayed differently, such as
--- 		'tabstop' and 'display'.
--- 		When {expr} contains characters with East Asian Width Class
--- 		Ambiguous, this function's return value depends on 'ambiwidth'.
--- 		Also see |strlen()|, |strwidth()| and |strchars()|.
+-- {not implemented yet}
+-- 		Search for a text property as specified with {props}:
+-- 		   id		property with this ID
+-- 		   type		property with this type name
+-- 		   bufnr	buffer to search in; when present a
+-- 				start position with "lnum" and "col"
+-- 				must be given; when omitted the
+-- 				current buffer is used
+-- 		   lnum		start in this line (when omitted start
+-- 				at the cursor)
+-- 		   col		start at this column (when omitted
+-- 				and "lnum" is given: use column 1,
+-- 				otherwise start at the cursor)
+-- 		   skipstart	do not look for a match at the start
+-- 				position
+--
+-- 		{direction} can be "f" for forward and "b" for backward.  When
+-- 		omitted forward search is performed.
+--
+-- 		If a match is found then a Dict is returned with the entries
+-- 		as with prop_list(), and additionally an "lnum" entry.
+-- 		If no match is found then an empty Dict is returned.
+--
+-- 		See |text-properties| for information about text properties.
+--- @return dict
+function vim.fn.prop_find(props, direction) end
+
+-- position given with {expr}.  The accepted positions are:
+-- 		    .	    the cursor position
+-- 		    $	    the last line in the current buffer
+-- 		    'x	    position of mark x (if the mark is not set, 0 is
+-- 			    returned)
+-- 		    w0	    first line visible in current window (one if the
+-- 			    display isn't updated, e.g. in silent Ex mode)
+-- 		    w$	    last line visible in current window (this is one
+-- 			    less than "w0" if no lines are visible)
+-- 		    v	    In Visual mode: the start of the Visual area (the
+-- 			    cursor is the end).  When not in Visual mode
+-- 			    returns the cursor position.  Differs from |'<| in
+-- 			    that it's updated right away.
+-- 		Note that a mark in another file can be used.  The line number
+-- 		then applies to another buffer.
+-- 		To get the column number use |col()|.  To get both use
+-- 		|getpos()|.
+-- 		Examples: >
+-- 			line(".")		line number of the cursor
+-- 			line("'t")		line number of mark t
+-- 			line("'" . marker)	line number of mark marker
 --- @return number
-function vim.fn.strdisplaywidth(expr, col) end
-
--- Make a copy of {expr}.  For Numbers and Strings this isn't
--- 		different from using {expr} directly.
--- 		When {expr} is a |List| a full copy is created.  This means
--- 		that the original |List| can be changed without changing the
--- 		copy, and vice versa.  When an item is a |List|, a copy for it
--- 		is made, recursively.  Thus changing an item in the copy does
--- 		not change the contents of the original |List|.
--- 		When {noref} is omitted or zero a contained |List| or
--- 		|Dictionary| is only copied once.  All references point to
--- 		this single copy.  With {noref} set to 1 every occurrence of a
--- 		|List| or |Dictionary| results in a new copy.  This also means
--- 		that a cyclic reference causes deepcopy() to fail.
--- 								*E724*
--- 		Nesting is possible up to 100 levels.  When there is an item
--- 		that refers back to a higher level making a deep copy with
--- 		{noref} set to 1 will fail.
--- 		Also see |copy()|.
-function vim.fn.deepcopy(expr, noref) end
-
--- Convert {expr} into a JSON string.  Accepts
--- 		|msgpack-special-dict| as the input.  Will not convert
--- 		|Funcref|s, mappings with non-string keys (can be created as
--- 		|msgpack-special-dict|), values with self-referencing
--- 		containers, strings which contain non-UTF-8 characters,
--- 		pseudo-UTF-8 strings which contain codepoints reserved for
--- 		surrogate pairs (such strings are not valid UTF-8 strings).
--- 		Non-printable characters are converted into "\u1234" escapes
--- 		or special escapes like "\t", other are dumped as-is.
---- @return string
-function vim.fn.json_encode(expr) end
+function vim.fn.line(expr) end
 
 -- The result is a String, the entry with Number {index} from
 -- 		{history}.  See |hist-names| for the possible values of
@@ -62,200 +68,158 @@ function vim.fn.json_encode(expr) end
 --- @return string
 function vim.fn.histget(history, index) end
 
--- The result is a String, which is the read, write, and execute
--- 		permissions of the given file {fname}.
--- 		If {fname} does not exist or its directory cannot be read, an
--- 		empty string is returned.
--- 		The result is of the form "rwxrwxrwx", where each group of
--- 		"rwx" flags represent, in turn, the permissions of the owner
--- 		of the file, the group the file belongs to, and other users.
--- 		If a user does not have a given permission the flag for this
--- 		is replaced with the string "-".  Examples: >
--- 			:echo getfperm("/etc/passwd")
--- 			:echo getfperm(expand("~/.config/nvim/init.vim"))
--- <		This will hopefully (from a security point of view) display
--- 		the string "rw-r--r--" or even "rw-------".
+-- Defines a pattern to be highlighted in the current window (a
+-- 		"match").  It will be highlighted with {group}.  Returns an
+-- 		identification number (ID), which can be used to delete the
+-- 		match using |matchdelete()|.
+-- 		Matching is case sensitive and magic, unless case sensitivity
+-- 		or magicness are explicitly overridden in {pattern}.  The
+-- 		'magic', 'smartcase' and 'ignorecase' options are not used.
+-- 		The "Conceal" value is special, it causes the match to be
+-- 		concealed.
 --
--- 		For setting permissions use |setfperm()|.
---- @return string
-function vim.fn.getfperm(fname) end
-
--- Get a line of text from the terminal window of {buf}.
--- 		{buf} is used as with |term_getsize()|.
+-- 		The optional {priority} argument assigns a priority to the
+-- 		match.  A match with a high priority will have its
+-- 		highlighting overrule that of a match with a lower priority.
+-- 		A priority is specified as an integer (negative numbers are no
+-- 		exception).  If the {priority} argument is not specified, the
+-- 		default priority is 10.  The priority of 'hlsearch' is zero,
+-- 		hence all matches with a priority greater than zero will
+-- 		overrule it.  Syntax highlighting (see 'syntax') is a separate
+-- 		mechanism, and regardless of the chosen priority a match will
+-- 		always overrule syntax highlighting.
 --
--- 		The first line has {row} one.  When {row} is "." the cursor
--- 		line is used.  When {row} is invalid an empty string is
--- 		returned.
+-- 		The optional {id} argument allows the request for a specific
+-- 		match ID.  If a specified ID is already taken, an error
+-- 		message will appear and the match will not be added.  An ID
+-- 		is specified as a positive integer (zero excluded).  IDs 1, 2
+-- 		and 3 are reserved for |:match|, |:2match| and |:3match|,
+-- 		respectively.  If the {id} argument is not specified or -1,
+-- 		|matchadd()| automatically chooses a free ID.
 --
--- 		To get attributes of each character use |term_scrape()|.
+-- 		The optional {dict} argument allows for further custom
+-- 		values. Currently this is used to specify a match specific
+-- 		conceal character that will be shown for |hl-Conceal|
+-- 		highlighted matches. The dict can have the following members:
 --
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_getline(row)
---- @return string
-function vim.fn.term_getline(buf, row) end
-
--- Change options for {job}.  Supported are:
--- 		   "stoponexit"	|job-stoponexit|
--- 		   "exit_cb"	|job-exit_cb|
+-- 			conceal	    Special character to show instead of the
+-- 				    match (only for |hl-Conceal| highlighed
+-- 				    matches, see |:syn-cchar|)
+-- 			window	    Instead of the current window use the
+-- 				    window with this number or window ID.
 --
--- 		Can also be used as a |method|: >
--- 			GetJob()->job_setoptions(options)
---- @return none
-function vim.fn.job_setoptions(job, options) end
-
--- Without {end} the result is a String, which is line {lnum}
--- 		from the current buffer.  Example: >
--- 			getline(1)
--- <		When {lnum} is a String that doesn't start with a
--- 		digit, |line()| is called to translate the String into a Number.
--- 		To get the line under the cursor: >
--- 			getline(".")
--- <		When {lnum} is smaller than 1 or bigger than the number of
--- 		lines in the buffer, an empty string is returned.
+-- 		The number of matches is not limited, as it is the case with
+-- 		the |:match| commands.
 --
--- 		When {end} is given the result is a |List| where each item is
--- 		a line from the current buffer in the range {lnum} to {end},
--- 		including line {end}.
--- 		{end} is used in the same way as {lnum}.
--- 		Non-existing lines are silently omitted.
--- 		When {end} is before {lnum} an empty |List| is returned.
 -- 		Example: >
--- 			:let start = line('.')
--- 			:let end = search("^$") - 1
--- 			:let lines = getline(start, end)
+-- 			:highlight MyGroup ctermbg=green guibg=green
+-- 			:let m = matchadd("MyGroup", "TODO")
+-- <		Deletion of the pattern: >
+-- 			:call matchdelete(m)
 --
--- <		To get lines from another buffer see |getbufline()|
---- @return list
-function vim.fn.getline(lnum, _end) end
+-- <		A list of matches defined by |matchadd()| and |:match| are
+-- 		available from |getmatches()|.  All matches can be deleted in
+-- 		one operation by |clearmatches()|.
+--- @return number
+function vim.fn.matchadd(group, pattern, priority, id) end
 
--- Stop playing sound {id}.  {id} must be previously returned by
--- 		`sound_playevent()` or `sound_playfile()`.
---
--- 		On MS-Windows, this does not work for event sound started by
--- 		`sound_playevent()`. To stop event sounds, use `sound_clear()`.
+-- Send |String| or |Blob| {expr} over {handle}.
+-- 		Works like |ch_sendexpr()|, but does not encode the request or
+-- 		decode the response.  The caller is responsible for the
+-- 		correct contents.  Also does not add a newline for a channel
+-- 		in NL mode, the caller must do that.  The NL in the response
+-- 		is removed.
+-- 		See |channel-use|.
 --
 -- 		Can also be used as a |method|: >
--- 			soundid->sound_stop()
---
--- <		{only available when compiled with the |+sound| feature}
---- @return none
-function vim.fn.sound_stop(id) end
+-- 			GetChannel()->ch_sendraw(rawexpr)
+function vim.fn.ch_sendraw(handle, expr, options) end
 
--- Return a |List| with spelling suggestions to replace {word}.
--- 		When {max} is given up to this number of suggestions are
--- 		returned.  Otherwise up to 25 suggestions are returned.
---
--- 		When the {capital} argument is given and it's non-zero only
--- 		suggestions with a leading capital will be given.  Use this
--- 		after a match with 'spellcapcheck'.
---
--- 		{word} can be a badly spelled word followed by other text.
--- 		This allows for joining two words that were split.  The
--- 		suggestions also include the following text, thus you can
--- 		replace a line.
---
--- 		{word} may also be a good word.  Similar words will then be
--- 		returned.  {word} itself is not included in the suggestions,
--- 		although it may appear capitalized.
---
--- 		The spelling information for the current window is used.  The
--- 		'spell' option must be set and the values of 'spelllang' and
--- 		'spellsuggest' are used.
---- @return list
-function vim.fn.spellsuggest(word, max, capital) end
+-- Run {cmd} and add an error message to |v:errors| if it does
+-- 		NOT produce an error.  Also see |assert-return|.
+-- 		When {error} is given it must match in |v:errmsg|.
+-- 		Note that beeping is not considered an error, and some failing
+-- 		commands only beep.  Use |assert_beeps()| for those.
+--- @return number
+function vim.fn.assert_fails(cmd, error) end
 
--- Returns a list with all the current quickfix errors.  Each
--- 		list item is a dictionary with these entries:
--- 			bufnr	number of buffer that has the file name, use
--- 				bufname() to get the name
--- 			module	module name
--- 			lnum	line number in the buffer (first line is 1)
--- 			col	column number (first column is 1)
--- 			vcol	|TRUE|: "col" is visual column
--- 				|FALSE|: "col" is byte index
--- 			nr	error number
--- 			pattern	search pattern used to locate the error
--- 			text	description of the error
--- 			type	type of the error, 'E', '1', etc.
--- 			valid	|TRUE|: recognized error message
+-- Return the line number that contains the character at byte
+-- 		count {byte} in the current buffer.  This includes the
+-- 		end-of-line character, depending on the 'fileformat' option
+-- 		for the current buffer.  The first character has byte count
+-- 		one.
+-- 		Also see |line2byte()|, |go| and |:goto|.
+--- @return number
+function vim.fn.byte2line(byte) end
+
+-- The result is a Number, which is the |window-ID| of the first
+-- 		window associated with buffer {expr}.  For the use of {expr},
+-- 		see |bufname()| above.  If buffer {expr} doesn't exist or
+-- 		there is no such window, -1 is returned.  Example: >
 --
--- 		When there is no error list or it's empty, an empty list is
--- 		returned. Quickfix list entries with non-existing buffer
--- 		number are returned with "bufnr" set to zero.
---
--- 		Useful application: Find pattern matches in multiple files and
--- 		do something with them: >
--- 			:vimgrep /theword/jg *.c
--- 			:for d in getqflist()
--- 			:   echo bufname(d.bufnr) ':' d.lnum '=' d.text
--- 			:endfor
+-- 	echo "A window containing buffer 1 is " . (bufwinid(1))
 -- <
--- 		If the optional {what} dictionary argument is supplied, then
--- 		returns only the items listed in {what} as a dictionary. The
--- 		following string items are supported in {what}:
--- 			changedtick	get the total number of changes made
--- 					to the list |quickfix-changedtick|
--- 			context	get the |quickfix-context|
--- 			efm	errorformat to use when parsing "lines". If
--- 				not present, then the 'errorformat' option
--- 				value is used.
--- 			id	get information for the quickfix list with
--- 				|quickfix-ID|; zero means the id for the
--- 				current list or the list specified by "nr"
--- 			idx	index of the current entry in the list
--- 			items	quickfix list entries
--- 			lines	parse a list of lines using 'efm' and return
--- 				the resulting entries.  Only a |List| type is
--- 				accepted.  The current quickfix list is not
--- 				modified. See |quickfix-parse|.
--- 			nr	get information for this quickfix list; zero
--- 				means the current quickfix list and "$" means
--- 				the last quickfix list
--- 			size	number of entries in the quickfix list
--- 			title	get the list title |quickfix-title|
--- 			winid	get the quickfix |window-ID|
--- 			all	all of the above quickfix properties
--- 		Non-string items in {what} are ignored. To get the value of a
--- 		particular item, set it to zero.
--- 		If "nr" is not present then the current quickfix list is used.
--- 		If both "nr" and a non-zero "id" are specified, then the list
--- 		specified by "id" is used.
--- 		To get the number of lists in the quickfix stack, set "nr" to
--- 		"$" in {what}. The "nr" value in the returned dictionary
--- 		contains the quickfix stack size.
--- 		When "lines" is specified, all the other items except "efm"
--- 		are ignored.  The returned dictionary contains the entry
--- 		"items" with the list of entries.
---
--- 		The returned dictionary contains the following entries:
--- 			changedtick	total number of changes made to the
--- 					list |quickfix-changedtick|
--- 			context	quickfix list context. See |quickfix-context|
--- 				If not present, set to "".
--- 			id	quickfix list ID |quickfix-ID|. If not
--- 				present, set to 0.
--- 			idx	index of the current entry in the list. If not
--- 				present, set to 0.
--- 			items	quickfix list entries. If not present, set to
--- 				an empty list.
--- 			nr	quickfix list number. If not present, set to 0
--- 			size	number of entries in the quickfix list. If not
--- 				present, set to 0.
--- 			title	quickfix list title text. If not present, set
--- 				to "".
--- 			winid	quickfix |window-ID|. If not present, set to 0
---
--- 		Examples (See also |getqflist-examples|): >
--- 			:echo getqflist({'all': 1})
--- 			:echo getqflist({'nr': 2, 'title': 1})
--- 			:echo getqflist({'lines' : ["F1:10:L10"]})
---- @return list
-function vim.fn.getqflist(what) end
+-- 		Only deals with the current tab page.
+--- @return number
+function vim.fn.bufwinid(expr) end
 
--- {list}.
--- 		If you want a list to remain unmodified make a copy first: >
--- 			:let revlist = reverse(copy(mylist))
---- @param list any[]
 --- @return list
-function vim.fn.reverse(list) end
+function vim.fn.searchpairpos(start, middle, _end, flags, ...) end
+
+-- Return a |Channel| that is null. Only useful for testing.
+-- 		{only available when compiled with the +channel feature}
+--- @return channel
+function vim.fn.test_null_channel() end
+
+-- Execute Lua code. Parameters (if any) are available as `...`
+--                 inside the chunk. The chunk can return a value.
+--
+--                 Only statements are executed. To evaluate an expression,
+--                 prefix it with `return` : return my_function(...)
+--
+--                 Parameters: ~
+--                     {code}  Lua code to execute
+--                     {args}  Arguments to the code
+--
+--                 Return: ~
+--                     Return value of Lua code if present or NIL.
+--- @param args any[]
+function vim.fn.nvim_exec_lua(code, args) end
+
+-- The result is a Number, which gives the byte index in
+-- 		{haystack} of the first occurrence of the String {needle}.
+-- 		If {start} is specified, the search starts at index {start}.
+-- 		This can be used to find a second match: >
+-- 			:let colon1 = stridx(line, ":")
+-- 			:let colon2 = stridx(line, ":", colon1 + 1)
+-- <		The search is done case-sensitive.
+-- 		For pattern searches use |match()|.
+-- 		-1 is returned if the {needle} does not occur in {haystack}.
+-- 		See also |strridx()|.
+-- 		Examples: >
+-- 		  :echo stridx("An Example", "Example")	     3
+-- 		  :echo stridx("Starting point", "Start")    0
+-- 		  :echo stridx("Starting point", "start")   -1
+-- <						*strstr()* *strchr()*
+-- 		stridx() works similar to the C function strstr().  When used
+-- 		with a single character it works similar to strchr().
+--- @return number
+function vim.fn.stridx(haystack, needle, start) end
+
+-- Like |append()| but append the text in buffer {expr}.
+--
+-- 		For the use of {expr}, see |bufname()|.
+--
+-- 		{lnum} is used like with |append()|.  Note that using |line()|
+-- 		would use the current buffer, not the one appending to.
+-- 		Use "$" to append at the end of the buffer.
+--
+-- 		On success 0 is returned, on failure 1 is returned.
+--
+-- 		If {expr} is not a valid buffer or {lnum} is not valid, an
+-- 		error message is given. Example: >
+-- 			:let failed = appendbufline(13, 0, "# THE START")
+-- <
+--- @return number
+function vim.fn.appendbufline(expr, lnum, text) end
 

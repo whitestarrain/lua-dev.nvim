@@ -137,17 +137,24 @@ function M.intro(fd)
     )
 end
 
+local vim_modules = {
+    ["match"] = "filetype.match",
+    ["add"] = "filetype.add",
+    ["select"] = "ui.select",
+    ["input"] = "ui.input",
+    ["set"] = "keymap.set",
+    ["del"] = "keymap.del",
+}
+
 function M.get_functions(mpack)
     mpack = "data/" .. mpack
     local data = vim.fn.msgpackparse(vim.fn.readfile(mpack, "b"))
     local ret = {}
     for _, functions in pairs(data) do
         for name, fun in pairs(functions) do
-            if name == "set" then
-                name = "keymap.set"
-            end
-            if name == "del" then
-                name = "keymap.del"
+            if vim.tbl_contains(vim.tbl_keys(vim_modules), name) then
+                name = vim_modules[name]
+                print(name)
             end
             table.insert(ret, { name, fun })
         end

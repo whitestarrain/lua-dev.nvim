@@ -1,14 +1,445 @@
 --# selene: allow(unused_variable)
 ---@diagnostic disable: unused-local
 
+-- string	(default: ".,w,b,u,t")
+-- 			local to buffer
+-- 	This option specifies how keyword completion |ins-completion| works
+-- 	when CTRL-P or CTRL-N are used.  It is also used for whole-line
+-- 	completion |i_CTRL-X_CTRL-L|.  It indicates the type of completion
+-- 	and the places to scan.  It is a comma separated list of flags:
+-- 	.	scan the current buffer ('wrapscan' is ignored)
+-- 	w	scan buffers from other windows
+-- 	b	scan other loaded buffers that are in the buffer list
+-- 	u	scan the unloaded buffers that are in the buffer list
+-- 	U	scan the buffers that are not in the buffer list
+-- 	k	scan the files given with the 'dictionary' option
+-- 	kspell  use the currently active spell checking |spell|
+-- 	k{dict}	scan the file {dict}.  Several "k" flags can be given,
+-- 		patterns are valid too.  For example: >
+-- 			:set cpt=k/usr/dict/*,k~/spanish
+-- <	s	scan the files given with the 'thesaurus' option
+-- 	s{tsr}	scan the file {tsr}.  Several "s" flags can be given, patterns
+-- 		are valid too.
+-- 	i	scan current and included files
+-- 	d	scan current and included files for defined name or macro
+-- 		|i_CTRL-X_CTRL-D|
+-- 	]	tag completion
+-- 	t	same as "]"
+vim.bo.complete = ".,w,b,u,t"
+-- boolean	(default off)
+-- 			local to buffer
+-- 	Lisp mode: When <Enter> is typed in insert mode set the indent for
+-- 	the next line to Lisp standards (well, sort of).  Also happens with
+-- 	"cc" or "S".  'autoindent' must also be on for this to work.  The 'p'
+-- 	flag in 'cpoptions' changes the method of indenting: Vi compatible or
+-- 	better.  Also see 'lispwords'.
+-- 	The '-' character is included in keyword characters.  Redefines the
+-- 	"=" operator to use this same indentation algorithm rather than
+-- 	calling an external program if 'equalprg' is empty.
+-- 	This option is not used when 'paste' is set.
+vim.bo.lisp = "false"
+-- number	(default 1000)
+-- 			global or local to buffer |global-local|
+-- 	Maximum number of changes that can be undone.  Since undo information
+-- 	is kept in memory, higher numbers will cause more memory to be used
+-- 	(nevertheless, a single change can use an unlimited amount of memory).
+-- 	Set to 0 for Vi compatibility: One level of undo and "u" undoes
+-- 	itself: >
+-- 		set ul=0
+-- <	But you can also get Vi compatibility by including the 'u' flag in
+-- 	'cpoptions', and still be able to use CTRL-R to repeat undo.
+-- 	Also see |undo-two-ways|.
+-- 	Set to -1 for no undo at all.  You might want to do this only for the
+-- 	current buffer: >
+-- 		setlocal ul=-1
+-- <	This helps when you run out of memory for a single change.
+vim.bo.undolevels = "1000"
 -- boolean	(default off)
 -- 			global
--- 	When on, the OS function fsync() will be called after saving a file
--- 	(|:write|, |writefile()|, …), |swap-file| and |shada-file|. This
--- 	flushes the file to disk, ensuring that it is safely written.
--- 	Slow on some systems: writing buffers, quitting Nvim, and other
--- 	operations may sometimes take a few seconds.
-vim.o.fsync = "false"
+-- 	Round indent to multiple of 'shiftwidth'.  Applies to > and <
+-- 	commands.  CTRL-T and CTRL-D in Insert mode always round the indent to
+-- 	a multiple of 'shiftwidth' (this is Vi compatible).
+vim.o.shiftround = "false"
+-- string	(Vim default "filnxtToOF", Vi default: "S")
+-- 			global
+-- 	This option helps to avoid all the |hit-enter| prompts caused by file
+-- 	messages, for example  with CTRL-G, and to avoid some other messages.
+-- 	It is a list of flags:
+-- 	 flag	meaning when present	~
+-- 	  f	use "(3 of 5)" instead of "(file 3 of 5)"
+-- 	  i	use "[noeol]" instead of "[Incomplete last line]"
+-- 	  l	use "999L, 888C" instead of "999 lines, 888 characters"
+-- 	  m	use "[+]" instead of "[Modified]"
+-- 	  n	use "[New]" instead of "[New File]"
+-- 	  r	use "[RO]" instead of "[readonly]"
+-- 	  w	use "[w]" instead of "written" for file write message
+-- 		and "[a]" instead of "appended" for ':w >> file' command
+-- 	  x	use "[dos]" instead of "[dos format]", "[unix]" instead of
+-- 		"[unix format]" and "[mac]" instead of "[mac format]".
+-- 	  a	all of the above abbreviations
+vim.o.shortmess = "filnxtToOF"
+-- string	(default "")
+-- 			global
+-- 	String to put at the start of lines that have been wrapped.  Useful
+-- 	values are "> " or "+++ ": >
+-- 		:set showbreak=>\
+-- <	Note the backslash to escape the trailing space.  It's easier like
+-- 	this: >
+-- 		:let &showbreak = '+++ '
+-- <	Only printable single-cell characters are allowed, excluding <Tab> and
+-- 	comma (in a future version the comma might be used to separate the
+-- 	part that is shown at the end and at the start of a line).
+-- 	The |hl-NonText| highlight group determines the highlighting.
+-- 	Note that tabs after the showbreak will be displayed differently.
+-- 	If you want the 'showbreak' to appear in between line numbers, add the
+-- 	"n" flag to 'cpoptions'.
+vim.o.showbreak = ""
+-- boolean	(Vim default: on, Vi default: off)
+-- 			global
+-- 	Show (partial) command in the last line of the screen.  Set this
+-- 	option off if your terminal is slow.
+-- 	In Visual mode the size of the selected area is shown:
+-- 	- When selecting characters within a line, the number of characters.
+-- 	  If the number of bytes is different it is also displayed: "2-6"
+-- 	  means two characters and six bytes.
+-- 	- When selecting more than one line, the number of lines.
+-- 	- When selecting a block, the size in screen characters:
+-- 	  {lines}x{columns}.
+vim.o.showcmd = "true"
+-- boolean (default off)
+-- 			global
+-- 	When completing a word in insert mode (see |ins-completion|) from the
+-- 	tags file, show both the tag name and a tidied-up form of the search
+-- 	pattern (if there is one) as possible matches.  Thus, if you have
+-- 	matched a C function, you can see a template for what arguments are
+-- 	required (coding style permitting).
+-- 	Note that this doesn't work well together with having "longest" in
+-- 	'completeopt', because the completion from the search pattern may not
+-- 	match the typed text.
+vim.o.showfulltag = "false"
+-- string	(default "~")
+-- 			global
+-- 	String which is appended to a file name to make the name of the
+-- 	backup file.  The default is quite unusual, because this avoids
+-- 	accidentally overwriting existing files with a backup file.  You might
+-- 	prefer using ".bak", but make sure that you don't have files with
+-- 	".bak" that you want to keep.
+-- 	Only normal file name characters can be used, "/\*?[|<>" are illegal.
+vim.o.backupext = "~"
+-- string	(default: "$TMPDIR/*,$TMP/*,$TEMP/*"
+-- 				 Unix: "/tmp/*,$TMPDIR/*,$TMP/*,$TEMP/*"
+-- 				 Mac: "/private/tmp/*,$TMPDIR/*,$TMP/*,$TEMP/*")
+-- 			global
+-- 	A list of file patterns.  When one of the patterns matches with the
+-- 	name of the file which is written, no backup file is created.  Both
+-- 	the specified file name and the full path name of the file are used.
+-- 	The pattern is used like with |:autocmd|, see |autocmd-pattern|.
+-- 	Watch out for special characters, see |option-backslash|.
+-- 	When $TMPDIR, $TMP or $TEMP is not defined, it is not used for the
+-- 	default value.  "/tmp/*" is only used for Unix.
+vim.o.backupskip = "/private/tmp/*,/var/folders/k3/msc14xk559v0ht3fxfq6r1qr0000gp/T/*"
+-- string	(default "all")
+-- 			global
+-- 	Specifies for which events the bell will not be rung. It is a comma
+-- 	separated list of items. For each item that is present, the bell
+-- 	will be silenced. This is most useful to specify specific events in
+-- 	insert mode to be silenced.
+vim.o.belloff = "all"
+-- string	(default " ^I!@*-+;:,./?")
+-- 			global
+-- 	This option lets you choose which characters might cause a line
+-- 	break if 'linebreak' is on.  Only works for ASCII characters.
+vim.o.breakat = " \9!@*-+;:,./?"
+-- string	(default: "last")
+-- 			global
+-- 	Which directory to use for the file browser:
+-- 	   last		Use same directory as with last file browser, where a
+-- 			file was opened or saved.
+-- 	   buffer	Use the directory of the related buffer.
+-- 	   current	Use the current directory.
+-- 	   {path}	Use the specified directory
+vim.o.browsedir = ""
+-- string	(default: "internal,keepascii")
+-- 			global
+-- 	Specifies details about changing the case of letters.  It may contain
+-- 	these words, separated by a comma:
+-- 	internal	Use internal case mapping functions, the current
+-- 			locale does not change the case mapping. When
+-- 			"internal" is omitted, the towupper() and towlower()
+-- 			system library functions are used when available.
+-- 	keepascii	For the ASCII characters (0x00 to 0x7f) use the US
+-- 			case mapping, the current locale is not effective.
+-- 			This probably only matters for Turkish.
+vim.o.casemap = "internal,keepascii"
+vim.o.cdhome = "false"
+-- string	(default: equivalent to $CDPATH or ",,")
+-- 			global
+-- 	This is a list of directories which will be searched when using the
+-- 	|:cd| and |:lcd| commands, provided that the directory being searched
+-- 	for has a relative path, not an absolute part starting with "/", "./"
+-- 	or "../", the 'cdpath' option is not used then.
+-- 	The 'cdpath' option's value has the same form and semantics as
+-- 	|'path'|.  Also see |file-searching|.
+-- 	The default value is taken from $CDPATH, with a "," prepended to look
+-- 	in the current directory first.
+-- 	If the default value taken from $CDPATH is not what you want, include
+-- 	a modified version of the following command in your vimrc file to
+-- 	override it: >
+-- 	  :let &cdpath = ',' . substitute(substitute($CDPATH, '[, ]', '\\\0', 'g'), ':', ',', 'g')
+-- <	This option cannot be set from a |modeline| or in the |sandbox|, for
+-- 	security reasons.
+-- 	(parts of 'cdpath' can be passed to the shell to expand file names).
+vim.o.cdpath = ",,"
+-- string	(Vim default: CTRL-F, Vi default: "")
+-- 			global
+-- 	The key used in Command-line Mode to open the command-line window.
+-- 	Only non-printable keys are allowed.
+-- 	The key can be specified as a single character, but it is difficult to
+-- 	type.  The preferred way is to use the <> notation.  Examples: >
+-- 		:exe "set cedit=\<C-Y>"
+-- 		:exe "set cedit=\<Esc>"
+-- <	|Nvi| also has this option, but it only uses the first character.
+-- 	See |cmdwin|.
+vim.o.cedit = "\6"
+-- string (default "")
+-- 			global
+-- 	An expression that is used for character encoding conversion.  It is
+-- 	evaluated when a file that is to be read or has been written has a
+-- 	different encoding from what is desired.
+-- 	'charconvert' is not used when the internal iconv() function is
+-- 	supported and is able to do the conversion.  Using iconv() is
+-- 	preferred, because it is much faster.
+-- 	'charconvert' is not used when reading stdin |--|, because there is no
+-- 	file to convert from.  You will have to save the text in a file first.
+-- 	The expression must return zero or an empty string for success,
+-- 	non-zero for failure.
+-- 	See |encoding-names| for possible encoding names.
+-- 	Additionally, names given in 'fileencodings' and 'fileencoding' are
+-- 	used.
+-- 	Conversion between "latin1", "unicode", "ucs-2", "ucs-4" and "utf-8"
+-- 	is done internally by Vim, 'charconvert' is not used for this.
+-- 	Also used for Unicode conversion.
+-- 	Example: >
+-- 		set charconvert=CharConvert()
+-- 		fun CharConvert()
+-- 		  system("recode "
+-- 			\ . v:charconvert_from . ".." . v:charconvert_to
+-- 			\ . " <" . v:fname_in . " >" v:fname_out)
+-- 		  return v:shell_error
+-- 		endfun
+-- <	The related Vim variables are:
+-- 		v:charconvert_from	name of the current encoding
+-- 		v:charconvert_to	name of the desired encoding
+-- 		v:fname_in		name of the input file
+-- 		v:fname_out		name of the output file
+-- 	Note that v:fname_in and v:fname_out will never be the same.
+-- 	This option cannot be set from a |modeline| or in the |sandbox|, for
+-- 	security reasons.
+vim.o.charconvert = ""
+-- string	(default "")
+-- 			global
+-- 	This option is a list of comma separated names.
+-- 	These names are recognized:
+vim.o.clipboard = ""
+-- number	(default 1)
+-- 			global
+-- 	Number of screen lines to use for the command-line.  Helps avoiding
+-- 	|hit-enter| prompts.
+-- 	The value of this option is stored with the tab page, so that each tab
+-- 	page can have a different value.
+vim.o.cmdheight = "1"
+-- number	(default 7)
+-- 			global
+-- 	Number of screen lines to use for the command-line window. |cmdwin|
+vim.o.cmdwinheight = "7"
+-- number	(default 80 or terminal width)
+-- 			global
+-- 	Number of columns of the screen.  Normally this is set by the terminal
+-- 	initialization and does not have to be set by hand.
+-- 	When Vim is running in the GUI or in a resizable window, setting this
+-- 	option will cause the window size to be changed.  When you only want
+-- 	to use the size for the GUI, put the command in your |ginit.vim| file.
+-- 	When you set this option and Vim is unable to change the physical
+-- 	number of columns of the display, the display may be messed up.  For
+-- 	the GUI it is always possible and Vim limits the number of columns to
+-- 	what fits on the screen.  You can use this command to get the widest
+-- 	window possible: >
+-- 		:set columns=9999
+-- <	Minimum value is 12, maximum value is 10000.
+vim.o.columns = "80"
+-- boolean	(default on, off when a |vimrc| or |gvimrc|
+-- 					file is found, reset in |defaults.vim|)
+-- 			global
+-- 	This option has the effect of making Vim either more Vi-compatible, or
+-- 	make Vim behave in a more useful way.
+vim.o.compatible = "false"
+-- string	(default: "menu,preview")
+-- 			global
+-- 	A comma separated list of options for Insert mode completion
+-- 	|ins-completion|.  The supported values are:
+vim.o.completeopt = "menu,preview"
+-- string	(default: "")
+-- 			local to buffer
+-- 			{only for MS-Windows}
+-- 	When this option is set it overrules 'shellslash' for completion:
+-- 	- When this option is set to "slash", a forward slash is used for path
+-- 	  completion in insert mode. This is useful when editing HTML tag, or
+-- 	  Makefile with 'noshellslash' on Windows.
+-- 	- When this option is set to "backslash", backslash is used. This is
+-- 	  useful when editing a batch file with 'shellslash' set on Windows.
+-- 	- When this option is empty, same character is used as for
+-- 	  'shellslash'.
+-- 	For Insert mode completion the buffer-local value is used.  For
+-- 	command line completion the global value is used.
+vim.o.completeslash = ""
+-- boolean (default off)
+-- 			global
+-- 	When 'confirm' is on, certain operations that would normally
+-- 	fail because of unsaved changes to a buffer, e.g. ":q" and ":e",
+-- 	instead raise a dialog asking if you wish to save the current
+-- 	file(s).  You can still use a ! to unconditionally |abandon| a buffer.
+-- 	If 'confirm' is off you can still activate confirmation for one
+-- 	command only (this is most useful in mappings) with the |:confirm|
+-- 	command.
+-- 	Also see the |confirm()| function and the 'v' flag in 'guioptions'.
+vim.o.confirm = "false"
+-- string	(Vim default: "aABceFs_",
+-- 				 Vi default: all flags)
+-- 			global
+-- 	A sequence of single character flags.  When a character is present
+-- 	this indicates Vi-compatible behavior.  This is used for things where
+-- 	not being Vi-compatible is mostly or sometimes preferred.
+-- 	'cpoptions' stands for "compatible-options".
+-- 	Commas can be added for readability.
+-- 	To avoid problems with flags that are added in the future, use the
+-- 	"+=" and "-=" feature of ":set" |add-option-flags|.
+vim.o.cpoptions = "aABceFs_"
+-- number	(default 0)
+-- 			global
+-- 	Determines how many components of the path to show in a list of tags.
+-- 	See |cscopepathcomp|.
+vim.o.cscopepathcomp = "0"
+-- string	(default "cscope")
+-- 			global
+-- 	Specifies the command to execute cscope.  See |cscopeprg|.
+-- 	This option cannot be set from a |modeline| or in the |sandbox|, for
+-- 	security reasons.
+vim.o.cscopeprg = "cscope"
+-- string	(default "")
+-- 			global
+-- 	Specifies whether to use quickfix window to show cscope results.
+-- 	See |cscopequickfix|.
+vim.o.cscopequickfix = ""
+-- boolean (default off)
+-- 			global
+-- 	In the absence of a prefix (-P) for cscope. setting this option enables
+-- 	to use the basename of cscope.out path as the prefix.
+-- 	See |cscoperelative|.
+vim.o.cscoperelative = "false"
+-- boolean (default off)
+-- 			global
+-- 	Use cscope for tag commands.  See |cscope-options|.
+vim.o.cscopetag = "false"
+-- number	(default 0)
+-- 			global
+-- 	Determines the order in which ":cstag" performs a search.  See
+-- 	|cscopetagorder|.
+vim.o.cscopetagorder = "0"
+-- boolean (default off)
+-- 			global
+-- 			{not available when compiled without the |+cscope|
+-- 			feature}
+-- 	Give messages when adding a cscope database.  See |cscopeverbose|.
+-- 	NOTE: This option is reset when 'compatible' is set.
+vim.o.cscopeverbose = "true"
+-- string	(default on Unix: ".,/usr/include,,"
+-- 				   other systems: ".,,")
+-- 			global or local to buffer |global-local|
+-- 	This is a list of directories which will be searched when using the
+-- 	|gf|, [f, ]f, ^Wf, |:find|, |:sfind|, |:tabfind| and other commands,
+-- 	provided that the file being searched for has a relative path (not
+-- 	starting with "/", "./" or "../").  The directories in the 'path'
+-- 	option may be relative or absolute.
+-- 	- Use commas to separate directory names: >
+-- 		:set path=.,/usr/local/include,/usr/include
+-- <	- Spaces can also be used to separate directory names (for backwards
+-- 	  compatibility with version 3.0).  To have a space in a directory
+-- 	  name, precede it with an extra backslash, and escape the space: >
+-- 		:set path=.,/dir/with\\\ space
+-- <	- To include a comma in a directory name precede it with an extra
+-- 	  backslash: >
+-- 		:set path=.,/dir/with\\,comma
+-- <	- To search relative to the directory of the current file, use: >
+-- 		:set path=.
+-- <	- To search in the current directory use an empty string between two
+-- 	  commas: >
+-- 		:set path=,,
+-- <	- A directory name may end in a ':' or '/'.
+-- 	- Environment variables are expanded |:set_env|.
+-- 	- When using |netrw.vim| URLs can be used.  For example, adding
+-- 	  "http://www.vim.org" will make ":find index.html" work.
+-- 	- Search upwards and downwards in a directory tree using "*", "**" and
+-- 	  ";".  See |file-searching| for info and syntax.
+-- 	- Careful with '\' characters, type two to get one in the option: >
+-- 		:set path=.,c:\\include
+-- <	  Or just use '/' instead: >
+-- 		:set path=.,c:/include
+-- <	Don't forget "." or files won't even be found in the same directory as
+-- 	the file!
+-- 	The maximum length is limited.  How much depends on the system, mostly
+-- 	it is something like 256 or 1024 characters.
+-- 	You can check if all the include files are found, using the value of
+-- 	'path', see |:checkpath|.
+-- 	The use of |:set+=| and |:set-=| is preferred when adding or removing
+-- 	directories from the list.  This avoids problems when a future version
+-- 	uses another default.  To remove the current directory use: >
+-- 		:set path-=
+-- <	To add the current directory use: >
+-- 		:set path+=
+-- <	To use an environment variable, you probably need to replace the
+-- 	separator.  Here is an example to append $INCL, in which directory
+-- 	names are separated with a semi-colon: >
+-- 		:let &path = &path . "," . substitute($INCL, ';', ',', 'g')
+-- <	Replace the ';' with a ':' or whatever separator is used.  Note that
+-- 	this doesn't work when $INCL contains a comma or white space.
+vim.o.path = ".,/usr/include,,"
+-- string (default "")
+-- 			global or local to buffer |global-local|
+-- 	The name of an external program that will be used to format the lines
+-- 	selected with the |gq| operator.  The program must take the input on
+-- 	stdin and produce the output on stdout.  The Unix program "fmt" is
+-- 	such a program.
+-- 	If the 'formatexpr' option is not empty it will be used instead.
+-- 	Otherwise, if 'formatprg' option is an empty string, the internal
+-- 	format function will be used |C-indenting|.
+-- 	Environment variables are expanded |:set_env|.  See |option-backslash|
+-- 	about including spaces and backslashes.
+-- 	This option cannot be set from a |modeline| or in the |sandbox|, for
+-- 	security reasons.
+vim.o.formatprg = ""
+-- string	(default "^\s*#\s*define")
+-- 			global or local to buffer |global-local|
+-- 	Pattern to be used to find a macro definition.  It is a search
+-- 	pattern, just like for the "/" command.  This option is used for the
+-- 	commands like "[i" and "[d" |include-search|.  The 'isident' option is
+-- 	used to recognize the defined name after the match:
+-- 		{match with 'define'}{non-ID chars}{defined name}{non-ID char}
+-- 	See |option-backslash| about inserting backslashes to include a space
+-- 	or backslash.
+-- 	The default value is for C programs.  For C++ this value would be
+-- 	useful, to include const type declarations: >
+-- 		^\(#\s*define\|[a-z]*\s*const\s*[a-z]*\)
+-- <	You can also use "\ze" just before the name and continue the pattern
+-- 	to check what is following.  E.g. for Javascript, if a function is
+-- 	defined with "func_name = function(args)": >
+-- 		^\s*\ze\i\+\s*=\s*function(
+-- <	If the function is defined with "func_name : function() {...": >
+-- 	        ^\s*\ze\i\+\s*[:]\s*(*function\s*(
+-- <	When using the ":set" command, you need to double the backslashes!
+-- 	To avoid that use `:let` with a single quote string: >
+-- 		let &l:define = '^\s*\ze\k\+\s*=\s*function('
+-- <
+vim.o.define = "^\\s*#\\s*define"
 -- boolean	(default off)
 -- 			global
 -- 	When on, the ":substitute" flag 'g' is default on.  This means that
@@ -16,12 +447,27 @@ vim.o.fsync = "false"
 -- 	is given to a ":substitute" command, this will toggle the substitution
 -- 	of all or one match.  See |complex-change|.
 vim.o.gdefault = "false"
+-- boolean (default off)
+-- 			global
+-- 	If editing Unicode and this option is set, backspace and Normal mode
+-- 	"x" delete each combining character on its own.  When it is off (the
+-- 	default) the character along with its combining characters are
+-- 	deleted.
+-- 	Note: When 'delcombine' is set "xx" may work different from "2x"!
+vim.o.delcombine = "false"
 -- string	(default "%f:%l:%m,%f:%l%m,%f  %l%m")
 -- 			global
 -- 	Format to recognize for the ":grep" command output.
 -- 	This is a scanf-like string that uses the same format as the
 -- 	'errorformat' option: see |errorformat|.
 vim.o.grepformat = "%f:%l:%m,%f:%l%m,%f  %l%m"
+-- string	(default "")
+-- 			global
+-- 	Expression which is evaluated to obtain a diff file (either ed-style
+-- 	or unified-style) from two versions of a file.  See |diff-diffexpr|.
+-- 	This option cannot be set from a |modeline| or in the |sandbox|, for
+-- 	security reasons.
+vim.o.diffexpr = ""
 -- string	(default "grep -n ",
 -- 				 Unix: "grep -n $* /dev/null")
 -- 			global or local to buffer |global-local|
@@ -41,6 +487,11 @@ vim.o.grepformat = "%f:%l:%m,%f:%l%m,%f  %l%m"
 -- 	This option cannot be set from a |modeline| or in the |sandbox|, for
 -- 	security reasons.
 vim.o.grepprg = "grep -n $* /dev/null"
+-- string	(default "internal,filler,closeoff")
+-- 			global
+-- 	Option settings for diff mode.  It can consist of the following items.
+-- 	All are optional.  Items must be separated by a comma.
+vim.o.diffopt = "internal,filler,closeoff"
 -- string	(default "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20")
 -- 			global
 -- 	Configures the cursor style for each mode. Works in the GUI and many
@@ -48,8 +499,9 @@ vim.o.grepprg = "grep -n $* /dev/null"
 vim.o.guicursor = "n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20"
 -- boolean	(default off)
 -- 			global
--- 	This option is obsolete; |bracketed-paste-mode| is built-in.
-vim.o.paste = "false"
+-- 	Enable the entering of digraphs in Insert mode with {char1} <BS>
+-- 	{char2}.  See |digraphs|.
+vim.o.digraph = "false"
 -- string	(default "")
 -- 			global
 -- 	This is a list of fonts which will be used for the GUI version of Vim.
@@ -66,6 +518,23 @@ vim.o.guifont = ""
 -- 	Note: The size of these fonts must be exactly twice as wide as the one
 -- 	specified with 'guifont' and the same height.
 vim.o.guifontwide = ""
+-- string	(default "lastline,msgsep", Vi default: "")
+-- 			global
+-- 	Change the way text is displayed.  This is comma separated list of
+-- 	flags:
+-- 	lastline	When included, as much as possible of the last line
+-- 			in a window will be displayed.  "@@@" is put in the
+-- 			last columns of the last screen line to indicate the
+-- 			rest of the line is not displayed.
+-- 	truncate	Like "lastline", but "@@@" is displayed in the first
+-- 			column of the last screen line.  Overrules "lastline".
+-- 	uhex		Show unprintable characters hexadecimal as <xx>
+-- 			instead of using ^C and ~C.
+-- 	msgsep		When showing messages longer than 'cmdheight', only
+-- 			scroll the message lines, not the entire screen. The
+-- 			separator line is decorated by |hl-MsgSeparator| and
+-- 			the "msgsep" flag of 'fillchars'.
+vim.o.display = "lastline,msgsep"
 -- string	(default "egmrLT"   (MS-Windows))
 -- 			global
 -- 	This option only has an effect in the GUI version of Vim.  It is a
@@ -80,6 +549,13 @@ vim.o.guioptions = ""
 -- 	pages line.  When empty and when the result is empty Vim will use a
 -- 	default label.  See |setting-guitablabel| for more info.
 vim.o.guitablabel = ""
+-- string	(default "both")
+-- 			global
+-- 	Tells when the 'equalalways' option applies:
+-- 		ver	vertically, width of windows is not affected
+-- 		hor	horizontally, height of windows is not affected
+-- 		both	width and height of windows is affected
+vim.o.eadirection = "both"
 -- string	(default empty)
 -- 			global
 -- 	When nonempty describes the text to use in a tooltip for the GUI tab
@@ -89,6 +565,13 @@ vim.o.guitablabel = ""
 -- 		:let &guitabtooltip = "line one\nline two"
 -- <
 vim.o.guitabtooltip = ""
+-- boolean	(default off)
+-- 			global
+-- 	Makes the 'g' and 'c' flags of the ":substitute" command to be
+-- 	toggled each time the flag is given.  See |complex-change|.  See
+-- 	also 'gdefault' option.
+-- 	Switching this option on may break plugins!
+vim.o.edcompatible = "false"
 -- string	(default (MSDOS)  "$VIMRUNTIME\doc\help.txt"
 -- 					 (others) "$VIMRUNTIME/doc/help.txt")
 -- 			global
@@ -102,14 +585,26 @@ vim.o.guitabtooltip = ""
 -- 	This option cannot be set from a |modeline| or in the |sandbox|, for
 -- 	security reasons.
 vim.o.helpfile = "/usr/local/Cellar/neovim/HEAD-a8d5a9e/share/nvim/runtime/doc/help.txt"
--- number	(default 20)
+-- number	(default 24 or terminal height)
 -- 			global
--- 	Minimal initial height of the help window when it is opened with the
--- 	":help" command.  The initial height of the help window is half of the
--- 	current window, or (when the 'ea' option is on) the same as other
--- 	windows.  When the height is less than 'helpheight', the height is
--- 	set to 'helpheight'.  Set to zero to disable.
-vim.o.helpheight = "20"
+-- 	Number of lines of the Vim window.
+-- 	Normally you don't need to set this.  It is done automatically by the
+-- 	terminal initialization code.
+-- 	When Vim is running in the GUI or in a resizable window, setting this
+-- 	option will cause the window size to be changed.  When you only want
+-- 	to use the size for the GUI, put the command in your |gvimrc| file.
+-- 	Vim limits the number of lines to what fits on the screen.  You can
+-- 	use this command to get the tallest window possible: >
+-- 		:set lines=999
+-- <	Minimum value is 2, maximum value is 1000.
+vim.o.lines = "24"
+-- string (default: "latin1" or value from $LANG)
+-- 			global
+-- 	Sets the character encoding used inside Vim.  It applies to text in
+-- 	the buffers, registers, Strings in expressions, text stored in the
+-- 	viminfo file, etc.  It sets the kind of characters which Vim can work
+-- 	with.  See |encoding-names| for the possible values.
+vim.o.encoding = "utf-8"
 -- string	(default: messages language or empty)
 -- 			global
 -- 	Comma separated list of languages.  Vim will use the first language
@@ -125,18 +620,6 @@ vim.o.helpheight = "20"
 -- 	try to find the tag in the current language before using this option.
 -- 	See |help-translated|.
 vim.o.helplang = ""
--- boolean (default: off)
--- 			global
--- 	When on allow some options that are an expression to be set in the
--- 	modeline.  Check the option for whether it is affected by
--- 	'modelineexpr'.  Also see |modeline|.
-vim.o.modelineexpr = "false"
--- number	(default 5)
--- 			global
--- 	If 'modeline' is on 'modelines' gives the number of lines that is
--- 	checked for set commands.  If 'modeline' is off or 'modelines' is zero
--- 	no lines are checked.  See |modeline|.
-vim.o.modelines = "5"
 -- boolean	(default off)
 -- 			global
 -- 	When off a buffer is unloaded when it is |abandon|ed.  When on a
@@ -151,67 +634,72 @@ vim.o.modelines = "5"
 -- 	WARNING: It's easy to forget that you have changes in hidden buffers.
 -- 	Think twice when using ":q!" or ":qa!".
 vim.o.hidden = "true"
--- boolean	(Vim default: on, Vi default: off)
+-- boolean	(default on)
 -- 			global
--- 	When on, listings pause when the whole screen is filled.  You will get
--- 	the |more-prompt|.  When this option is off there are no pauses, the
--- 	listing continues until finished.
-vim.o.more = "true"
+-- 	When on, all the windows are automatically made the same size after
+-- 	splitting or closing a window.  This also happens the moment the
+-- 	option is switched on.  When off, splitting a window will reduce the
+-- 	size of the current window and leave the other windows the same.  When
+-- 	closing a window the extra lines are given to the window next to it
+-- 	(depending on 'splitbelow' and 'splitright').
+-- 	When mixing vertically and horizontally split windows, a minimal size
+-- 	is computed and some windows may be larger if there is room.  The
+-- 	'eadirection' option tells in which direction the size is affected.
+-- 	Changing the height and width of a window can be avoided by setting
+-- 	'winfixheight' and 'winfixwidth', respectively.
+-- 	If a window size is specified when creating a new window sizes are
+-- 	currently not equalized (it's complicated, but may be implemented in
+-- 	the future).
+vim.o.equalalways = "true"
 -- string	(default "")
+-- 			global or local to buffer |global-local|
+-- 	External program to use for "=" command.  When this option is empty
+-- 	the internal formatting functions are used; either 'lisp', 'cindent'
+-- 	or 'indentexpr'.  When Vim was compiled without internal formatting,
+-- 	the "indent" program is used.
+-- 	Environment variables are expanded |:set_env|.  See |option-backslash|
+-- 	about including spaces and backslashes.
+-- 	This option cannot be set from a |modeline| or in the |sandbox|, for
+-- 	security reasons.
+vim.o.equalprg = ""
+-- number	(Vim default: 10000, Vi default: 0)
 -- 			global
-vim.o.mouse = ""
+-- 	A history of ":" commands, and a history of previous search patterns
+-- 	is remembered.  This option decides how many entries may be stored in
+-- 	each of these histories (see |cmdline-editing|).
+-- 	The maximum value is 10000.
+vim.o.history = "10000"
 -- boolean	(default off)
 -- 			global
--- 			{only works in the GUI}
--- 	The window that the mouse pointer is on is automatically activated.
--- 	When changing the window layout or window focus in another way, the
--- 	mouse pointer is moved to the window with keyboard focus.  Off is the
--- 	default because it makes using the pull down menus a little goofy, as
--- 	a pointer transit may activate a window unintentionally.
-vim.o.mousefocus = "false"
+-- 	Ring the bell (beep or screen flash) for error messages.  This only
+-- 	makes a difference for error messages, the bell will be used always
+-- 	for a lot of errors without a message (e.g., hitting <Esc> in Normal
+-- 	mode).  See 'visualbell' to make the bell behave like a screen flash
+-- 	or do nothing. See 'belloff' to finetune when to ring the bell.
+vim.o.errorbells = "false"
 -- boolean (default off)
 -- 			global
 -- 	When on, the keyboard is mapped for the Hebrew character set.
 -- 	Normally you would set 'allowrevins' and use CTRL-_ in insert mode to
 -- 	toggle this option.  See |rileft.txt|.
 vim.o.hkmap = "false"
--- boolean	(default on)
+-- string	(default: "errors.err")
 -- 			global
--- 			{only works in the GUI}
--- 	When on, the mouse pointer is hidden when characters are typed.
--- 	The mouse pointer is restored when the mouse is moved.
-vim.o.mousehide = "true"
+-- 	Name of the errorfile for the QuickFix mode (see |:cf|).
+-- 	When the "-q" command-line argument is used, 'errorfile' is set to the
+-- 	following argument.  See |-q|.
+-- 	NOT used for the ":make" command.  See 'makeef' for that.
+-- 	Environment variables are expanded |:set_env|.
+-- 	See |option-backslash| about including spaces and backslashes.
+-- 	This option cannot be set from a |modeline| or in the |sandbox|, for
+-- 	security reasons.
+vim.o.errorfile = "errors.err"
 -- boolean (default off)
 -- 			global
 -- 	When on, phonetic keyboard mapping is used.  'hkmap' must also be on.
 -- 	This is useful if you have a non-Hebrew keyboard.
 -- 	See |rileft.txt|.
 vim.o.hkmapp = "false"
--- string	(default "extend")
--- 			global
--- 	Sets the model to use for the mouse.  The name mostly specifies what
--- 	the right mouse button is used for:
--- 	   extend	Right mouse button extends a selection.  This works
--- 			like in an xterm.
--- 	   popup	Right mouse button pops up a menu.  The shifted left
--- 			mouse button extends a selection.  This works like
--- 			with Microsoft Windows.
--- 	   popup_setpos Like "popup", but the cursor will be moved to the
--- 			position where the mouse was clicked, and thus the
--- 			selected operation will act upon the clicked object.
--- 			If clicking inside a selection, that selection will
--- 			be acted upon, i.e. no cursor move.  This implies of
--- 			course, that right clicking outside a selection will
--- 			end Visual mode.
--- 	Overview of what button does what for each model:
--- 	mouse		    extend		popup(_setpos) ~
--- 	left click	    place cursor	place cursor
--- 	left drag	    start selection	start selection
--- 	shift-left	    search word		extend selection
--- 	right click	    extend selection	popup menu (place cursor)
--- 	right drag	    extend selection	-
--- 	middle click	    paste		paste
-vim.o.mousemodel = "extend"
 -- boolean	(default on)
 -- 			global
 -- 	When there is a previous search pattern, highlight all its matches.
@@ -264,6 +752,11 @@ vim.o.ignorecase = "false"
 -- 	English characters directly, e.g., when it's used to type accented
 -- 	characters with dead keys.
 vim.o.imcmdline = "false"
+-- boolean (default off)
+-- 			global
+-- 	Enables the reading of .vimrc, .exrc and .gvimrc in the current
+-- 	directory.
+vim.o.exrc = "false"
 -- boolean (default off, on for some systems (SGI))
 -- 			global
 -- 	When set the Input Method is never used.  This is useful to disable
@@ -271,14 +764,58 @@ vim.o.imcmdline = "false"
 -- 	Currently this option is on by default for SGI/IRIX machines.  This
 -- 	may change in later releases.
 vim.o.imdisable = "false"
+-- string (default: "ucs-bom,utf-8,default,latin1")
+-- 			global
+-- 	This is a list of character encodings considered when starting to edit
+-- 	an existing file.  When a file is read, Vim tries to use the first
+-- 	mentioned character encoding.  If an error is detected, the next one
+-- 	in the list is tried.  When an encoding is found that works,
+-- 	'fileencoding' is set to it.  If all fail, 'fileencoding' is set to
+-- 	an empty string, which means that UTF-8 is used.
+-- 		WARNING: Conversion can cause loss of information! You can use
+-- 		the |++bad| argument to specify what is done with characters
+-- 		that can't be converted.
+-- 	For an empty file or a file with only ASCII characters most encodings
+-- 	will work and the first entry of 'fileencodings' will be used (except
+-- 	"ucs-bom", which requires the BOM to be present).  If you prefer
+-- 	another encoding use an BufReadPost autocommand event to test if your
+-- 	preferred encoding is to be used.  Example: >
+-- 		au BufReadPost * if search('\S', 'w') == 0 |
+-- 			\ set fenc=iso-2022-jp | endif
+-- <	This sets 'fileencoding' to "iso-2022-jp" if the file does not contain
+-- 	non-blank characters.
+-- 	When the |++enc| argument is used then the value of 'fileencodings' is
+-- 	not used.
+-- 	Note that 'fileencodings' is not used for a new file, the global value
+-- 	of 'fileencoding' is used instead.  You can set it with: >
+-- 		:setglobal fenc=iso-8859-2
+-- <	This means that a non-existing file may get a different encoding than
+-- 	an empty file.
+-- 	The special value "ucs-bom" can be used to check for a Unicode BOM
+-- 	(Byte Order Mark) at the start of the file.  It must not be preceded
+-- 	by "utf-8" or another Unicode encoding for this to work properly.
+-- 	An entry for an 8-bit encoding (e.g., "latin1") should be the last,
+-- 	because Vim cannot detect an error, thus the encoding is always
+-- 	accepted.
+-- 	The special value "default" can be used for the encoding from the
+-- 	environment.  It is useful when your environment uses a non-latin1
+-- 	encoding, such as Russian.
+-- 	When a file contains an illegal UTF-8 byte sequence it won't be
+-- 	recognized as "utf-8".  You can use the |8g8| command to find the
+-- 	illegal byte sequence.
+-- 	WRONG VALUES:			WHAT'S WRONG:
+-- 		latin1,utf-8		"latin1" will always be used
+-- 		utf-8,ucs-bom,latin1	BOM won't be recognized in an utf-8
+-- 					file
+-- 		cp1250,latin1		"cp1250" will always be used
+-- 	If 'fileencodings' is empty, 'fileencoding' is not modified.
+-- 	See 'fileencoding' for the possible values.
+-- 	Setting this option does not have an effect until the next time a file
+-- 	is read.
+vim.o.fileencodings = "ucs-bom,utf-8,default,latin1"
 -- string	(default "")
 -- 			global
 vim.o.inccommand = "nosplit"
--- string	(default: empty)
--- 			global
--- 	This option specifies a function to be called by the |g@| operator.
--- 	See |:map-operator| for more info and an example.
-vim.o.operatorfunc = ""
 -- string	(default "^\s*#\s*include")
 -- 			global or local to buffer |global-local|
 -- 	Pattern to be used to find an include command.  It is a search
@@ -293,14 +830,12 @@ vim.o.operatorfunc = ""
 -- 	'includeexpr' to process the matched text.
 -- 	See |option-backslash| about including spaces and backslashes.
 vim.o.include = "^\\s*#\\s*include"
--- string	(default: see 'runtimepath')
--- 	Directories used to find packages.  See |packages|.
-vim.o.packpath = "/Users/andri/.config/nvim,/etc/xdg/nvim,/Users/andri/.local/share/nvim/site,/usr/local/share/nvim/site,/usr/share/nvim/site,/usr/local/Cellar/neovim/HEAD-a8d5a9e/share/nvim/runtime,/usr/local/Cellar/neovim/HEAD-a8d5a9e/lib/nvim,/usr/share/nvim/site/after,/usr/local/share/nvim/site/after,/Users/andri/.local/share/nvim/site/after,/etc/xdg/nvim/after,/Users/andri/.config/nvim/after"
--- string	(default "IPLPPPQPP TPHPLIPpLpItpplpipbp")
+-- boolean	(default on for systems where case in file
+-- 				 names is normally ignored)
 -- 			global
--- 	Specifies the nroff macros that separate paragraphs.  These are pairs
--- 	of two letters (see |object-motions|).
-vim.o.paragraphs = "IPLPPPQPP TPHPLIPpLpItpplpipbp"
+-- 	When set case is ignored when using file names and directories.
+-- 	See 'wildignorecase' for only ignoring case when doing completion.
+vim.o.fileignorecase = "true"
 -- boolean	(default on)
 -- 			global
 -- 	While typing a search command, show where the pattern, as it was typed
@@ -335,40 +870,12 @@ vim.o.paragraphs = "IPLPPPQPP TPHPLIPpLpItpplpipbp"
 -- 	CTRL-R CTRL-W can be used to add the word at the end of the current
 -- 	match, excluding the characters that were already typed.
 vim.o.incsearch = "true"
--- string	(default "")
+-- string (default "")
 -- 			global
--- 	When non-empty, specifies the key sequence that toggles the 'paste'
--- 	option.  This is like specifying a mapping: >
--- 	    :map {keys} :set invpaste<CR>
--- <	Where {keys} is the value of 'pastetoggle'.
--- 	The difference is that it will work even when 'paste' is set.
--- 	'pastetoggle' works in Insert mode and Normal mode, but not in
--- 	Command-line mode.
--- 	Mappings are checked first, thus overrule 'pastetoggle'.  However,
--- 	when 'paste' is on mappings are ignored in Insert mode, thus you can do
--- 	this: >
--- 	    :map <F10> :set paste<CR>
--- 	    :map <F11> :set nopaste<CR>
--- 	    :imap <F10> <C-O>:set paste<CR>
--- 	    :imap <F11> <nop>
--- 	    :set pastetoggle=<F11>
--- <	This will make <F10> start paste mode and <F11> stop paste mode.
--- 	Note that typing <F10> in paste mode inserts "<F10>", since in paste
--- 	mode everything is inserted literally, except the 'pastetoggle' key
--- 	sequence.
--- 	No timeout is used, this means that a multi-key 'pastetoggle' can not
--- 	be triggered manually.
-vim.o.pastetoggle = ""
--- string	(default "")
--- 			global
--- 	Expression which is evaluated to apply a patch to a file and generate
--- 	the resulting new version of the file.  See |diff-patchexpr|.
-vim.o.patchexpr = ""
--- string	(default "")
--- 			global
--- 	This option is a list of comma separated names.
--- 	These names are recognized:
-vim.o.clipboard = ""
+-- 	When set to "all", a fold is closed when the cursor isn't in it and
+-- 	its level is higher than 'foldlevel'.  Useful if you want folds to
+-- 	automatically close when moving out of them.
+vim.o.foldclose = ""
 -- boolean	(default off)
 -- 			global
 -- 	Makes Vim work in a way that Insert mode is the default mode.  Useful
@@ -382,15 +889,21 @@ vim.o.clipboard = ""
 -- 	  <Esc> to get back to Insert mode.  Note that CTRL-L moves the cursor
 -- 	  left, like <Esc> does when 'insertmode' isn't set.  |i_CTRL-L|
 vim.o.insertmode = "false"
--- number	(default 7)
+-- string	(default for Windows:
+-- 			     "@,48-57,/,\,.,-,_,+,,,#,$,%,{,},[,],:,@-@,!,~,="
+-- 			    otherwise: "@,48-57,/,.,-,_,+,,,#,$,%,~,=")
 -- 			global
--- 	Number of screen lines to use for the command-line window. |cmdwin|
-vim.o.cmdwinheight = "7"
--- number (default 12)
--- 			global
--- 	Default height for a preview window.  Used for |:ptag| and associated
--- 	commands.  Used for |CTRL-W_}| when no count is given.
-vim.o.previewheight = "12"
+-- 	The characters specified by this option are included in file names and
+-- 	path names.  Filenames are used for commands like "gf", "[i" and in
+-- 	the tags file.  It is also used for "\f" in a |pattern|.
+-- 	Multi-byte characters 256 and above are always included, only the
+-- 	characters up to 255 are specified with this option.
+-- 	For UTF-8 the characters 0xa0 to 0xff are included as well.
+-- 	Think twice before adding white space to this option.  Although a
+-- 	space may appear inside a file name, the effect will be that Vim
+-- 	doesn't know where a file name starts or ends when doing completion.
+-- 	It most likely works better without a space in 'isfname'.
+vim.o.isfname = "@,48-57,/,.,-,_,+,,,#,$,%,~,="
 -- string	(default for Windows:
 -- 					   "@,48-57,_,128-167,224-235"
 -- 				otherwise: "@,48-57,_,192-255")
@@ -405,57 +918,35 @@ vim.o.previewheight = "12"
 -- 	expand "$HOME/.local/share/nvim/shada/main.shada".  Maybe you should
 -- 	change 'iskeyword' instead.
 vim.o.isident = "@,48-57,_,192-255"
--- number	(default 80 or terminal width)
+-- number (default: -1)
 -- 			global
--- 	Number of columns of the screen.  Normally this is set by the terminal
--- 	initialization and does not have to be set by hand.
--- 	When Vim is running in the GUI or in a resizable window, setting this
--- 	option will cause the window size to be changed.  When you only want
--- 	to use the size for the GUI, put the command in your |ginit.vim| file.
--- 	When you set this option and Vim is unable to change the physical
--- 	number of columns of the display, the display may be messed up.  For
--- 	the GUI it is always possible and Vim limits the number of columns to
--- 	what fits on the screen.  You can use this command to get the widest
--- 	window possible: >
--- 		:set columns=9999
--- <	Minimum value is 12, maximum value is 10000.
-vim.o.columns = "80"
--- string	(default empty)
+-- 	Sets 'foldlevel' when starting to edit another buffer in a window.
+-- 	Useful to always start editing with all folds closed (value zero),
+-- 	some folds closed (one) or no folds closed (99).
+-- 	This is done before reading any modeline, thus a setting in a modeline
+-- 	overrules this option.  Starting to edit a file for |diff-mode| also
+-- 	ignores this option and closes all folds.
+-- 	It is also done before BufReadPre autocommands, to allow an autocmd to
+-- 	overrule the 'foldlevel' value for specific files.
+-- 	When the value is negative, it is not used.
+vim.o.foldlevelstart = "-1"
+-- string	(default: "@,161-255")
 -- 			global
--- 	The name of the printer to be used for |:hardcopy|.
--- 	See |pdev-option|.
--- 	This option cannot be set from a |modeline| or in the |sandbox|, for
--- 	security reasons.
-vim.o.printdevice = ""
--- string	(default: "tab:> ,trail:-,nbsp:+"
--- 				 Vi default: "eol:$")
--- 			global or local to window |global-local|
--- 	Strings to use in 'list' mode and for the |:list| command.  It is a
--- 	comma separated list of string settings.
-vim.o.listchars = "tab:> ,trail:-,nbsp:+"
--- string	(default "")
--- 			global or local to window |global-local|
--- 	Characters to fill the statuslines and vertical separators.
--- 	It is a comma separated list of items:
-vim.o.fillchars = ""
--- string	(default: see below)
+-- 	The characters given by this option are displayed directly on the
+-- 	screen.  It is also used for "\p" in a |pattern|.  The characters from
+-- 	space (ASCII 32) to '~' (ASCII 126) are always displayed directly,
+-- 	even when they are not included in 'isprint' or excluded.  See
+-- 	'isfname' for a description of the format of this option.
+vim.o.isprint = "@,161-255"
+-- boolean	(default off)
 -- 			global
--- 	Expression used to print the PostScript produced with |:hardcopy|.
--- 	See |pexpr-option|.
--- 	This option cannot be set from a |modeline| or in the |sandbox|, for
--- 	security reasons.
-vim.o.printexpr = "system(['lpr'] + (empty(&printdevice)?[]:['-P', &printdevice]) + [v:fname_in]). delete(v:fname_in)+ v:shell_error"
+-- 	This option is obsolete; |bracketed-paste-mode| is built-in.
+vim.o.paste = "false"
 -- boolean	(default on)
 -- 			global
 -- 	Insert two spaces after a '.', '?' and '!' with a join command.
 -- 	Otherwise only one space is inserted.
 vim.o.joinspaces = "false"
--- boolean	(default on, off when a |vimrc| or |gvimrc|
--- 					file is found, reset in |defaults.vim|)
--- 			global
--- 	This option has the effect of making Vim either more Vi-compatible, or
--- 	make Vim behave in a more useful way.
-vim.o.compatible = "false"
 -- string	(default "")
 -- 			global
 -- 	List of words that change the behavior of the |jumplist|.
@@ -466,11 +957,6 @@ vim.o.compatible = "false"
 -- 			jumplist and then jumping to a location.
 -- 			|jumplist-stack|
 vim.o.jumpoptions = ""
--- string  (default "%<%f%h%m%=Page %N")
--- 			global
--- 	The format of the header produced in |:hardcopy| output.
--- 	See |pheader-option|.
-vim.o.printheader = "%<%f%h%m%=Page %N"
 -- string	(default "")
 -- 			global
 -- 	List of comma separated words, which enable special things that keys
@@ -500,11 +986,19 @@ vim.o.keymodel = ""
 -- <	This option cannot be set from a |modeline| or in the |sandbox|, for
 -- 	security reasons.
 vim.o.keywordprg = ":Man"
--- string (default "")
+-- string	(default "")
 -- 			global
--- 	List of font names to be used for CJK output from |:hardcopy|.
--- 	See |pmbfn-option|.
-vim.o.printmbfont = ""
+-- 	These values can be used:
+-- 	msg	Error messages that would otherwise be omitted will be given
+-- 		anyway.
+-- 	throw	Error messages that would otherwise be omitted will be given
+-- 		anyway and also throw an exception and set |v:errmsg|.
+-- 	beep	A message will be given when otherwise only a beep would be
+-- 		produced.
+-- 	The values can be combined, separated by a comma.
+-- 	"msg" and "throw" are useful for debugging 'foldexpr', 'formatexpr' or
+-- 	'indentexpr'.
+vim.o.debug = ""
 -- string	(default "")
 -- 			global
 -- 	This option allows switching your keyboard into a special language
@@ -520,11 +1014,6 @@ vim.o.printmbfont = ""
 -- 	This option cannot be set from a |modeline| or in the |sandbox|, for
 -- 	security reasons.
 vim.o.langmap = ""
--- string (default "")
--- 			global
--- 	List of items that control the format of the output of |:hardcopy|.
--- 	See |popt-option|.
-vim.o.printoptions = ""
 -- string	(default "")
 -- 			global
 -- 	Language to use for menu translation.  Tells which file is loaded
@@ -546,550 +1035,30 @@ vim.o.printoptions = ""
 -- 		:source $VIMRUNTIME/menu.vim
 -- <	Warning: This deletes all menus that you defined yourself!
 vim.o.langmenu = ""
--- boolean	(default on)
--- 			global
--- 	When on a ":" prompt is used in Ex mode.
-vim.o.prompt = "true"
--- boolean (default off, set in |defaults.vim|)
--- 			global
--- 			{only available when compiled with the |+langmap|
--- 			feature}
--- 	This is just like 'langremap' but with the value inverted.  It only
--- 	exists for backwards compatibility.  When setting 'langremap' then
--- 	'langnoremap' is set to the inverted value, and the other way around.
-vim.o.langnoremap = "true"
--- number	(default 0)
--- 			global
--- 	Maximum number of items to show in the popup menu
--- 	(|ins-completion-menu|). Zero means "use available screen space".
-vim.o.pumheight = "0"
--- boolean (default on)
--- 			global
--- 	When on and 'termbidi' is off, the required visual character
--- 	corrections that need to take place for displaying the Arabic language
--- 	take effect.  Shaping, in essence, gets enabled; the term is a broad
--- 	one which encompasses:
--- 	  a) the changing/morphing of characters based on their location
--- 	     within a word (initial, medial, final and stand-alone).
--- 	  b) the enabling of the ability to compose characters
--- 	  c) the enabling of the required combining of some characters
--- 	When disabled the display shows each character's true stand-alone
--- 	form.
--- 	Arabic is a complex language which requires other settings, for
--- 	further details see |arabic.txt|.
-vim.o.arabicshape = "true"
--- number	(default 15)
--- 			global
--- 	Minimum width for the popup menu (|ins-completion-menu|).  If the
--- 	cursor column + 'pumwidth' exceeds screen width, the popup menu is
--- 	nudged to fit on the screen.
-vim.o.pumwidth = "15"
--- boolean	(default off)
--- 			global
--- 	Allow CTRL-_ in Insert and Command-line mode.  This is default off, to
--- 	avoid that users that accidentally type CTRL-_ instead of SHIFT-_ get
--- 	into reverse Insert mode, and don't know how to get out.  See
--- 	'revins'.
-vim.o.allowrevins = "false"
--- boolean	(default off)
--- 			global
--- 	When this option is set, the screen will not be redrawn while
--- 	executing macros, registers and other commands that have not been
--- 	typed.  Also, updating the window title is postponed.  To force an
--- 	update use |:redraw|.
-vim.o.lazyredraw = "false"
--- string (default: "single")
--- 			global
--- 	Tells Vim what to do with characters with East Asian Width Class
--- 	Ambiguous (such as Euro, Registered Sign, Copyright Sign, Greek
--- 	letters, Cyrillic letters).
-vim.o.ambiwidth = "single"
-vim.o.quickfixtextfunc = ""
--- number	(default 0)
--- 			global
--- 			{only in the GUI}
--- 	Number of pixel lines inserted between characters.  Useful if the font
--- 	uses the full character cell height, making lines touch each other.
--- 	When non-zero there is room for underlining.
--- 	With some fonts there can be too much room between lines (to have
--- 	space for ascents and descents).  Then it makes sense to set
--- 	'linespace' to a negative value.  This may cause display problems
--- 	though!
-vim.o.linespace = "0"
--- string	(default is very long)
--- 			global or local to buffer |global-local|
--- 	Comma separated list of words that influence the Lisp indenting.
--- 	|'lisp'|
-vim.o.lispwords = "defun,define,defmacro,set!,lambda,if,case,let,flet,let*,letrec,do,do*,define-syntax,let-syntax,letrec-syntax,destructuring-bind,defpackage,defparameter,defstruct,deftype,defvar,do-all-symbols,do-external-symbols,do-symbols,dolist,dotimes,ecase,etypecase,eval-when,labels,macrolet,multiple-value-bind,multiple-value-call,multiple-value-prog1,multiple-value-setq,prog1,progv,typecase,unless,unwind-protect,when,with-input-from-string,with-open-file,with-open-stream,with-output-to-string,with-package-iterator,define-condition,handler-bind,handler-case,restart-bind,restart-case,with-simple-restart,store-value,use-value,muffle-warning,abort,continue,with-slots,with-slots*,with-accessors,with-accessors*,defclass,defmethod,print-unreadable-object"
--- string	(default '')
--- 			global
--- 	Flags to change the way redrawing works, for debugging purposes.
--- 	Most useful with 'writedelay' set to some reasonable value.
--- 	Supports the following flags:
--- 	    compositor	Indicate what redraws come from the compositor
--- 			by briefly flashing the redrawn regions in colors
--- 			indicating the redraw type. These are the highlight
--- 			groups used (and their default colors):
--- 		RedrawDebugNormal   gui=reverse   normal redraw passed through
--- 		RedrawDebugClear    guibg=Yellow  clear event passed through
--- 		RedrawDebugComposed guibg=Green   redraw event modified by the
--- 						  compositor (due to
--- 						  overlapping grids, etc)
--- 		RedrawDebugRecompose guibg=Red    redraw generated by the
--- 						  compositor itself, due to a
--- 						  grid being moved or deleted.
--- 	    nothrottle	Turn off throttling of the message grid. This is an
--- 			optimization that joins many small scrolls to one
--- 			larger scroll when drawing the message area (with
--- 			'display' msgsep flag active).
--- 	    invalid	Enable stricter checking (abort) of inconsistencies
--- 			of the internal screen state. This is mostly
--- 			useful when running nvim inside a debugger (and
--- 			the test suite).
--- 	    nodelta	Send all internally redrawn cells to the UI, even if
--- 	                they are unchanged from the already displayed state.
-vim.o.redrawdebug = ""
--- number	(default 2000)
--- 			global
--- 	Time in milliseconds for redrawing the display.  Applies to
--- 	'hlsearch', 'inccommand', |:match| highlighting and syntax
--- 	highlighting.
--- 	When redrawing takes more than this many milliseconds no further
--- 	matches will be highlighted.
--- 	For syntax highlighting the time applies per window.  When over the
--- 	limit syntax highlighting is disabled until |CTRL-L| is used.
--- 	This is used to avoid that Vim hangs when using a very complicated
--- 	pattern.
-vim.o.redrawtime = "2000"
--- boolean	(default on)
--- 			global
--- 	When on the plugin scripts are loaded when starting up |load-plugins|.
--- 	This option can be reset in your |vimrc| file to disable the loading
--- 	of plugins.
--- 	Note that using the "-u NONE" and "--noplugin" command line arguments
--- 	reset this option. |-u| |--noplugin|
-vim.o.loadplugins = "true"
--- number	(default 0)
--- 			global
--- 	This selects the default regexp engine. |two-engines|
--- 	The possible values are:
--- 		0	automatic selection
--- 		1	old engine
--- 		2	NFA engine
--- 	Note that when using the NFA engine and the pattern contains something
--- 	that is not supported the pattern will not match.  This is only useful
--- 	for debugging the regexp engine.
--- 	Using automatic selection enables Vim to switch the engine, if the
--- 	default engine becomes too costly.  E.g., when the NFA engine uses too
--- 	many states.  This should prevent Vim from hanging on a combination of
--- 	a complex pattern with long text.
-vim.o.regexpengine = "0"
--- boolean	(default on)
--- 			global
--- 	Changes the special characters that can be used in search patterns.
--- 	See |pattern|.
--- 	WARNING: Switching this option off most likely breaks plugins!  That
--- 	is because many patterns assume it's on and will fail when it's off.
--- 	Only switch it off when working with old Vi scripts.  In any other
--- 	situation write patterns that work when 'magic' is on.  Include "\M"
--- 	when you want to |/\M|.
-vim.o.magic = "true"
--- string	(default: "")
--- 			global
--- 	Name of the errorfile for the |:make| command (see |:make_makeprg|)
--- 	and the |:grep| command.
--- 	When it is empty, an internally generated temp file will be used.
--- 	When "##" is included, it is replaced by a number to make the name
--- 	unique.  This makes sure that the ":make" command doesn't overwrite an
--- 	existing file.
--- 	NOT used for the ":cf" command.  See 'errorfile' for that.
--- 	Environment variables are expanded |:set_env|.
--- 	See |option-backslash| about including spaces and backslashes.
--- 	This option cannot be set from a |modeline| or in the |sandbox|, for
--- 	security reasons.
-vim.o.makeef = ""
--- string	(default "")
--- 			global or local to buffer |global-local|
--- 	Encoding used for reading the output of external commands.  When empty,
--- 	encoding is not converted.
--- 	This is used for `:make`, `:lmake`, `:grep`, `:lgrep`, `:grepadd`,
--- 	`:lgrepadd`, `:cfile`, `:cgetfile`, `:caddfile`, `:lfile`, `:lgetfile`,
--- 	and `:laddfile`.
-vim.o.makeencoding = ""
--- number	(default 2)
--- 			global
--- 	Threshold for reporting number of lines changed.  When the number of
--- 	changed lines is more than 'report' a message will be given for most
--- 	":" commands.  If you want it always, set 'report' to 0.
--- 	For the ":substitute" command the number of substitutions is used
--- 	instead of the number of lines.
-vim.o.report = "2"
--- boolean	(default off)
--- 			global
--- 	Inserting characters in Insert mode will work backwards.  See "typing
--- 	backwards" |ins-reverse|.  This option can be toggled with the CTRL-_
--- 	command in Insert mode, when 'allowrevins' is set.
--- 	This option is reset when 'paste' is set and restored when 'paste' is
--- 	reset.
-vim.o.revins = "false"
--- number	(default 5)
--- 			global
--- 	Tenths of a second to show the matching paren, when 'showmatch' is
--- 	set.  Note that this is not in milliseconds, like other options that
--- 	set a time.  This is to be compatible with Nvi.
-vim.o.matchtime = "5"
--- boolean	(default on)
--- 			global
--- 	Show the line and column number of the cursor position, separated by a
--- 	comma.  When there is room, the relative position of the displayed
--- 	text in the file is shown on the far right:
--- 		Top	first line is visible
--- 		Bot	last line is visible
--- 		All	first and last line are visible
--- 		45%	relative position in the file
--- 	If 'rulerformat' is set, it will determine the contents of the ruler.
--- 	Each window has its own ruler.  If a window has a status line, the
--- 	ruler is shown there.  Otherwise it is shown in the last line of the
--- 	screen.  If the statusline is given by 'statusline' (i.e. not empty),
--- 	this option takes precedence over 'ruler' and 'rulerformat'
--- 	If the number of characters displayed is different from the number of
--- 	bytes in the text (e.g., for a TAB or a multi-byte character), both
--- 	the text column (byte number) and the screen column are shown,
--- 	separated with a dash.
--- 	For an empty line "0-1" is shown.
--- 	For an empty buffer the line number will also be zero: "0,0-1".
--- 	This option is reset when 'paste' is set and restored when 'paste' is
--- 	reset.
--- 	If you don't want to see the ruler all the time but want to know where
--- 	you are, use "g CTRL-G" |g_CTRL-G|.
-vim.o.ruler = "true"
--- Removed. |vim-differences|
--- 	Nvim always displays up to 6 combining characters.  You can still edit
---     text with more than 6 combining characters, you just can't see them.
---     Use |g8| or |ga|.  See |mbyte-combining|.
-vim.o.maxcombine = "6"
--- string	(default empty)
--- 			global
--- 	When this option is not empty, it determines the content of the ruler
--- 	string, as displayed for the 'ruler' option.
--- 	The format of this option is like that of 'statusline'.
--- 	This option cannot be set in a modeline when 'modelineexpr' is off.
-vim.o.rulerformat = ""
--- number	(default 100)
--- 			global
--- 	Maximum depth of function calls for user functions.  This normally
--- 	catches endless recursion.  When using a recursive function with
--- 	more depth, set 'maxfuncdepth' to a bigger number.  But this will use
--- 	more memory, there is the danger of failing when memory is exhausted.
--- 	Increasing this limit above 200 also changes the maximum for Ex
--- 	command recursion, see |E169|.
--- 	See also |:function|.
-vim.o.maxfuncdepth = "100"
--- string	(default:     "$XDG_CONFIG_HOME/nvim,
--- 					       $XDG_CONFIG_DIRS[1]/nvim,
--- 					       $XDG_CONFIG_DIRS[2]/nvim,
--- 					       …
--- 					       $XDG_DATA_HOME/nvim[-data]/site,
--- 					       $XDG_DATA_DIRS[1]/nvim/site,
--- 					       $XDG_DATA_DIRS[2]/nvim/site,
--- 					       …
--- 					       $VIMRUNTIME,
--- 					       …
--- 					       $XDG_DATA_DIRS[2]/nvim/site/after,
--- 					       $XDG_DATA_DIRS[1]/nvim/site/after,
--- 					       $XDG_DATA_HOME/nvim[-data]/site/after,
--- 					       …
--- 					       $XDG_CONFIG_DIRS[2]/nvim/after,
--- 					       $XDG_CONFIG_DIRS[1]/nvim/after,
--- 					       $XDG_CONFIG_HOME/nvim/after")
--- 			global
--- 	List of directories to be searched for these runtime files:
--- 	  filetype.vim	filetypes by file name |new-filetype|
--- 	  scripts.vim	filetypes by file contents |new-filetype-scripts|
--- 	  autoload/	automatically loaded scripts |autoload-functions|
--- 	  colors/	color scheme files |:colorscheme|
--- 	  compiler/	compiler files |:compiler|
--- 	  doc/		documentation |write-local-help|
--- 	  ftplugin/	filetype plugins |write-filetype-plugin|
--- 	  indent/	indent scripts |indent-expression|
--- 	  keymap/	key mapping files |mbyte-keymap|
--- 	  lang/		menu translations |:menutrans|
--- 	  menu.vim	GUI menus |menu.vim|
--- 	  pack/		packages |:packadd|
--- 	  plugin/	plugin scripts |write-plugin|
--- 	  print/	files for printing |postscript-print-encoding|
--- 	  rplugin/	|remote-plugin| scripts
--- 	  spell/	spell checking files |spell|
--- 	  syntax/	syntax files |mysyntaxfile|
--- 	  tutor/	tutorial files |:Tutor|
-vim.o.runtimepath = "/Users/andri/.config/nvim,/etc/xdg/nvim,/Users/andri/.local/share/nvim/site,/usr/local/share/nvim/site,/usr/share/nvim/site,/usr/local/Cellar/neovim/HEAD-a8d5a9e/share/nvim/runtime,/usr/local/Cellar/neovim/HEAD-a8d5a9e/lib/nvim,/usr/share/nvim/site/after,/usr/local/share/nvim/site/after,/Users/andri/.local/share/nvim/site/after,/etc/xdg/nvim/after,/Users/andri/.config/nvim/after"
--- number	(default 1000)
--- 			global
--- 	Maximum number of times a mapping is done without resulting in a
--- 	character to be used.  This normally catches endless mappings, like
--- 	":map x y" with ":map y x".  It still does not catch ":map g wg",
--- 	because the 'w' is used before the next mapping is done.  See also
--- 	|key-mapping|.
-vim.o.maxmapdepth = "1000"
--- number	(default 1000)
--- 			global
--- 	Maximum amount of memory (in Kbyte) to use for pattern matching.
--- 	The maximum value is about 2000000.  Use this to work without a limit.
--- 							*E363*
--- 	When Vim runs into the limit it gives an error message and mostly
--- 	behaves like CTRL-C was typed.
--- 	Running into the limit often means that the pattern is very
--- 	inefficient or too complex.  This may already happen with the pattern
--- 	"\(.\)*" on a very long line.  ".*" works much better.
--- 	Might also happen on redraw, when syntax rules try to match a complex
--- 	text structure.
--- 	Vim may run out of memory before hitting the 'maxmempattern' limit, in
--- 	which case you get an "Out of memory" error instead.
-vim.o.maxmempattern = "1000"
--- number	(default 25)
--- 			global
--- 	Maximum number of items to use in a menu.  Used for menus that are
--- 	generated from a list of items, e.g., the Buffers menu.  Changing this
--- 	option has no direct effect, the menu must be refreshed first.
-vim.o.menuitems = "25"
--- string	(default "460000,2000,500")
--- 			global
--- 	Parameters for |:mkspell|.  This tunes when to start compressing the
--- 	word tree.  Compression can be slow when there are many words, but
--- 	it's needed to avoid running out of memory.  The amount of memory used
--- 	per word depends very much on how similar the words are, that's why
--- 	this tuning is complicated.
-vim.o.mkspellmem = "460000,2000,500"
 -- number	(default 1)
 -- 			global
--- 	Minimal number of lines to scroll when the cursor gets off the
--- 	screen (e.g., with "j").  Not used for scroll commands (e.g., CTRL-E,
--- 	CTRL-D).  Useful if your terminal scrolls very slowly.
--- 	When set to a negative number from -1 to -100 this is used as the
--- 	percentage of the window height.  Thus -50 scrolls half the window
--- 	height.
-vim.o.scrolljump = "1"
--- number	(default 0)
+-- 	The minimal number of columns to scroll horizontally.  Used only when
+-- 	the 'wrap' option is off and the cursor is moved off of the screen.
+-- 	When it is zero the cursor will be put in the middle of the screen.
+-- 	When using a slow terminal set it to a large number or 0.  Not used
+-- 	for "zh" and "zl" commands.
+vim.o.sidescroll = "1"
+-- number (default 0)
 -- 			global or local to window |global-local|
--- 	Minimal number of screen lines to keep above and below the cursor.
--- 	This will make some context visible around where you are working.  If
--- 	you set it to a very large value (999) the cursor line will always be
--- 	in the middle of the window (except at the start or end of the file or
--- 	when long lines wrap).
+-- 	The minimal number of screen columns to keep to the left and to the
+-- 	right of the cursor if 'nowrap' is set.  Setting this option to a
+-- 	value greater than 0 while having |'sidescroll'| also at a non-zero
+-- 	value makes some context visible in the line you are scrolling in
+-- 	horizontally (except at beginning of the line).  Setting this option
+-- 	to a large value (like 999) has the effect of keeping the cursor
+-- 	horizontally centered in the window, as long as one does not come too
+-- 	close to the beginning of the line.
 -- 	After using the local value, go back the global value with one of
 -- 	these two: >
--- 		setlocal scrolloff<
--- 		setlocal scrolloff=-1
--- <	For scrolling horizontally see 'sidescrolloff'.
-vim.o.scrolloff = "0"
--- string	(default "ver,jump")
--- 			global
--- 	This is a comma-separated list of words that specifies how
--- 	'scrollbind' windows should behave.  'sbo' stands for ScrollBind
--- 	Options.
--- 	The following words are available:
--- 	    ver		Bind vertical scrolling for 'scrollbind' windows
--- 	    hor		Bind horizontal scrolling for 'scrollbind' windows
--- 	    jump	Applies to the offset between two windows for vertical
--- 			scrolling.  This offset is the difference in the first
--- 			displayed line of the bound windows.  When moving
--- 			around in a window, another 'scrollbind' window may
--- 			reach a position before the start or after the end of
--- 			the buffer.  The offset is not changed though, when
--- 			moving back the 'scrollbind' window will try to scroll
--- 			to the desired position when possible.
--- 			When now making that window the current one, two
--- 			things can be done with the relative offset:
--- 			1. When "jump" is not included, the relative offset is
--- 			   adjusted for the scroll position in the new current
--- 			   window.  When going back to the other window, the
--- 			   new relative offset will be used.
--- 			2. When "jump" is included, the other windows are
--- 			   scrolled to keep the same relative offset.  When
--- 			   going back to the other window, it still uses the
--- 			   same relative offset.
--- 	Also see |scroll-binding|.
--- 	When 'diff' mode is active there always is vertical scroll binding,
--- 	even when "ver" isn't there.
-vim.o.scrollopt = "ver,jump"
--- string	(default "SHNHH HUnhsh")
--- 			global
--- 	Specifies the nroff macros that separate sections.  These are pairs of
--- 	two letters (See |object-motions|).  The default makes a section start
--- 	at the nroff macros ".SH", ".NH", ".H", ".HU", ".nh" and ".sh".
-vim.o.sections = "SHNHH HUnhsh"
--- boolean	(default off)
--- 			global
--- 	When on, ":autocmd", shell and write commands are not allowed in
--- 	".nvimrc" and ".exrc" in the current directory and map commands are
--- 	displayed.  Switch it off only if you know that you will not run into
--- 	problems, or when the 'exrc' option is off.  On Unix this option is
--- 	only used if the ".nvimrc" or ".exrc" is not owned by you.  This can be
--- 	dangerous if the systems allows users to do a "chown".  You better set
--- 	'secure' at the end of your |init.vim| then.
--- 	This option cannot be set from a |modeline| or in the |sandbox|, for
--- 	security reasons.
-vim.o.secure = "false"
--- string	(default "inclusive")
--- 			global
--- 	This option defines the behavior of the selection.  It is only used
--- 	in Visual and Select mode.
--- 	Possible values:
--- 	   value	past line     inclusive ~
--- 	   old		   no		yes
--- 	   inclusive	   yes		yes
--- 	   exclusive	   yes		no
--- 	"past line" means that the cursor is allowed to be positioned one
--- 	character past the line.
--- 	"inclusive" means that the last character of the selection is included
--- 	in an operation.  For example, when "x" is used to delete the
--- 	selection.
--- 	When "old" is used and 'virtualedit' allows the cursor to move past
--- 	the end of line the line break still isn't included.
--- 	Note that when "exclusive" is used and selecting from the end
--- 	backwards, you cannot include the last character of a line, when
--- 	starting in Normal mode and 'virtualedit' empty.
-vim.o.selection = "inclusive"
--- string	(default "")
--- 			global
--- 	This is a comma separated list of words, which specifies when to start
--- 	Select mode instead of Visual mode, when a selection is started.
--- 	Possible values:
--- 	   mouse	when using the mouse
--- 	   key		when using shifted special keys
--- 	   cmd		when using "v", "V" or CTRL-V
--- 	See |Select-mode|.
--- 	The 'selectmode' option is set by the |:behave| command.
-vim.o.selectmode = ""
--- string	(default: "blank,buffers,curdir,folds,
--- 					       help,tabpages,winsize"
--- 				 Vi default: "blank,buffers,curdir,folds,
--- 					       help,options,tabpages,winsize")
--- 			global
--- 	Changes the effect of the |:mksession| command.  It is a comma
--- 	separated list of words.  Each word enables saving and restoring
--- 	something:
--- 	   word		save and restore ~
--- 	   blank	empty windows
--- 	   buffers	hidden and unloaded buffers, not just those in windows
--- 	   curdir	the current directory
--- 	   folds	manually created folds, opened/closed folds and local
--- 			fold options
--- 	   globals	global variables that start with an uppercase letter
--- 			and contain at least one lowercase letter.  Only
--- 			String and Number types are stored.
--- 	   help		the help window
--- 	   localoptions	options and mappings local to a window or buffer (not
--- 			global values for local options)
--- 	   options	all options and mappings (also global values for local
--- 			options)
--- 	   resize	size of the Vim window: 'lines' and 'columns'
--- 	   sesdir	the directory in which the session file is located
--- 			will become the current directory (useful with
--- 			projects accessed over a network from different
--- 			systems)
--- 	   slash	backslashes in file names replaced with forward
--- 			slashes
--- 	   tabpages	all tab pages; without this only the current tab page
--- 			is restored, so that you can make a session for each
--- 			tab page separately
--- 	   terminal	include terminal windows where the command can be
--- 			restored
--- 	   unix		with Unix end-of-line format (single <NL>), even when
--- 			on Windows or DOS
--- 	   winpos	position of the whole Vim window
--- 	   winsize	window sizes
-vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize"
--- string	(Vim default for
--- 				   Win32:  !,'100,<50,s10,h,rA:,rB:
--- 				   others: !,'100,<50,s10,h
--- 				 Vi default: "")
--- 			global
--- 	When non-empty, the shada file is read upon startup and written
--- 	when exiting Vim (see |shada-file|).  The string should be a comma
--- 	separated list of parameters, each consisting of a single character
--- 	identifying the particular parameter, followed by a number or string
--- 	which specifies the value of that parameter.  If a particular
--- 	character is left out, then the default value is used for that
--- 	parameter.  The following is a list of the identifying characters and
--- 	the effect of their value.
--- 	CHAR	VALUE	~
--- 							*shada-!*
--- 	!	When included, save and restore global variables that start
--- 		with an uppercase letter, and don't contain a lowercase
--- 		letter.  Thus "KEEPTHIS and "K_L_M" are stored, but "KeepThis"
--- 		and "_K_L_M" are not.  Nested List and Dict items may not be
--- 		read back correctly, you end up with an empty item.
--- 							*shada-quote*
--- 	"	Maximum number of lines saved for each register.  Old name of
--- 		the '<' item, with the disadvantage that you need to put a
--- 		backslash before the ", otherwise it will be recognized as the
--- 		start of a comment!
--- 							*shada-%*
--- 	%	When included, save and restore the buffer list.  If Vim is
--- 		started with a file name argument, the buffer list is not
--- 		restored.  If Vim is started without a file name argument, the
--- 		buffer list is restored from the shada file.  Quickfix
--- 		('buftype'), unlisted ('buflisted'), unnamed and buffers on
--- 		removable media (|shada-r|) are not saved.
--- 		When followed by a number, the number specifies the maximum
--- 		number of buffers that are stored.  Without a number all
--- 		buffers are stored.
--- 							*shada-'*
--- 	'	Maximum number of previously edited files for which the marks
--- 		are remembered.  This parameter must always be included when
--- 		'shada' is non-empty.
--- 		Including this item also means that the |jumplist| and the
--- 		|changelist| are stored in the shada file.
--- 							*shada-/*
--- 	/	Maximum number of items in the search pattern history to be
--- 		saved.  If non-zero, then the previous search and substitute
--- 		patterns are also saved.  When not included, the value of
--- 		'history' is used.
--- 							*shada-:*
--- 	:	Maximum number of items in the command-line history to be
--- 		saved.  When not included, the value of 'history' is used.
--- 							*shada-<*
--- 	<	Maximum number of lines saved for each register.  If zero then
--- 		registers are not saved.  When not included, all lines are
--- 		saved.  '"' is the old name for this item.
--- 		Also see the 's' item below: limit specified in KiB.
--- 							*shada-@*
--- 	@	Maximum number of items in the input-line history to be
--- 		saved.  When not included, the value of 'history' is used.
--- 							*shada-c*
--- 	c	Dummy option, kept for compatibility reasons.  Has no actual
--- 		effect: ShaDa always uses UTF-8 and 'encoding' value is fixed
--- 		to UTF-8 as well.
--- 							*shada-f*
--- 	f	Whether file marks need to be stored.  If zero, file marks ('0
--- 		to '9, 'A to 'Z) are not stored.  When not present or when
--- 		non-zero, they are all stored.  '0 is used for the current
--- 		cursor position (when exiting or when doing |:wshada|).
--- 							*shada-h*
--- 	h	Disable the effect of 'hlsearch' when loading the shada
--- 		file.  When not included, it depends on whether ":nohlsearch"
--- 		has been used since the last search command.
--- 							*shada-n*
--- 	n	Name of the shada file.  The name must immediately follow
--- 		the 'n'.  Must be at the end of the option!  If the
--- 		'shadafile' option is set, that file name overrides the one
--- 		given here with 'shada'.  Environment variables are
--- 		expanded when opening the file, not when setting the option.
--- 							*shada-r*
--- 	r	Removable media.  The argument is a string (up to the next
--- 		',').  This parameter can be given several times.  Each
--- 		specifies the start of a path for which no marks will be
--- 		stored.  This is to avoid removable media.  For Windows you
--- 		could use "ra:,rb:".  You can also use it for temp files,
--- 		e.g., for Unix: "r/tmp".  Case is ignored.
--- 							*shada-s*
--- 	s	Maximum size of an item contents in KiB.  If zero then nothing
--- 		is saved.  Unlike Vim this applies to all items, except for
--- 		the buffer list and header.  Full item size is off by three
--- 		unsigned integers: with `s10` maximum item size may be 1 byte
--- 		(type: 7-bit integer) + 9 bytes (timestamp: up to 64-bit
--- 		integer) + 3 bytes (item size: up to 16-bit integer because
--- 		2^8 < 10240 < 2^16) + 10240 bytes (requested maximum item
--- 		contents size) = 10253 bytes.
-vim.o.shada = "!,'100,<50,s10,h"
+-- 		setlocal sidescrolloff<
+-- 		setlocal sidescrolloff=-1
+-- <
+-- 	Example: Try this together with 'sidescroll' and 'listchars' as
+-- 		 in the following example to never allow the cursor to move
+-- 		 onto the "extends" character: >
+vim.o.sidescrolloff = "0"

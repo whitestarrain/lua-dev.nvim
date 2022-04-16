@@ -1,11 +1,6 @@
 --# selene: allow(unused_variable)
 ---@diagnostic disable: unused-local
 
--- Add new filetype mappings.
---- @param filetypes any #table A table containing new filetype maps
----                  (see example).
-function vim.add(filetypes) end
-
 function vim.connection_failure_errmsg(consequence) end
 
 -- Deep compare values for equality
@@ -37,6 +32,18 @@ function vim.defer_fn(fn, timeout) end
 --- @return any #(boolean) true if `suffix` is a suffix of s
 function vim.endswith(s, suffix) end
 
+-- Add new filetype mappings.
+--- @param filetypes any #table A table containing new filetype maps
+---                  (see example).
+function vim.filetype.add(filetypes) end
+
+-- Set the filetype for the given buffer from a file name.
+--- @param name any #string File name (can be an absolute or relative
+---              path)
+--- @param bufnr any #number|nil The buffer to set the filetype for.
+---              Defaults to the current buffer.
+function vim.filetype.match(name, bufnr) end
+
 -- Splits a string at each instance of a separator.
 --- @param s any #String to split
 --- @param sep any #Separator string or pattern
@@ -44,26 +51,6 @@ function vim.endswith(s, suffix) end
 ---              String.find)
 --- @return any #Iterator over the split components
 function vim.gsplit(s, sep, plain) end
-
--- Prompts the user for input
---- @param opts any #table Additional options. See |input()|
----                   • prompt (string|nil) Text of the prompt.
----                     Defaults to `Input:`.
----                   • default (string|nil) Default reply to the
----                     input
----                   • completion (string|nil) Specifies type of
----                     completion supported for input. Supported
----                     types are the same that can be supplied to
----                     a user-defined command using the
----                     "-complete=" argument. See
----                     |:command-completion|
----                   • highlight (function) Function that will be
----                     used for highlighting user inputs.
---- @param on_confirm any #function ((input|nil) -> ()) Called once the
----                   user confirms or abort the input. `input` is
----                   what the user typed. `nil` if the user
----                   aborted the dialog.
-function vim.input(opts, on_confirm) end
 
 -- Return a human-readable representation of the given object.
 function vim.inspect(object, options) end
@@ -143,13 +130,6 @@ function vim.list_extend(dst, src, start, finish) end
 --- @return any #Copy of table sliced from start to finish (inclusive)
 function vim.list_slice(list, start, finish) end
 
--- Set the filetype for the given buffer from a file name.
---- @param name any #string File name (can be an absolute or relative
----              path)
---- @param bufnr any #number|nil The buffer to set the filetype for.
----              Defaults to the current buffer.
-function vim.match(name, bufnr) end
-
 -- Display a notification to the user.
 --- @param msg any #string Content of the notification to show to the
 ---              user.
@@ -221,27 +201,6 @@ function vim.region(bufnr, pos1, pos2, regtype, inclusive) end
 
 -- Defers callback `cb` until the Nvim API is safe to call.
 function vim.schedule_wrap(cb) end
-
--- Prompts the user to pick a single item from a collection of
--- entries
---- @param items any #table Arbitrary items
---- @param opts any #table Additional options
----                  • prompt (string|nil) Text of the prompt.
----                    Defaults to `Select one of:`
----                  • format_item (function item -> text)
----                    Function to format an individual item from
----                    `items`. Defaults to `tostring`.
----                  • kind (string|nil) Arbitrary hint string
----                    indicating the item shape. Plugins
----                    reimplementing `vim.ui.select` may wish to
----                    use this to infer the structure or
----                    semantics of `items`, or the context in
----                    which select() was called.
---- @param on_choice any #function ((item|nil, idx|nil) -> ()) Called
----                  once the user made a choice. `idx` is the
----                  1-based index of `item` within `items`. `nil`
----                  if the user aborted the dialog.
-function vim.select(items, opts, on_choice) end
 
 -- Splits a string at each instance of a separator.
 --- @param s any #String to split
@@ -349,6 +308,47 @@ function vim.tbl_values(t) end
 --- @param s any #String to trim
 --- @return any #String with whitespace removed from its beginning and end
 function vim.trim(s) end
+
+-- Prompts the user for input
+--- @param opts any #table Additional options. See |input()|
+---                   • prompt (string|nil) Text of the prompt.
+---                     Defaults to `Input:`.
+---                   • default (string|nil) Default reply to the
+---                     input
+---                   • completion (string|nil) Specifies type of
+---                     completion supported for input. Supported
+---                     types are the same that can be supplied to
+---                     a user-defined command using the
+---                     "-complete=" argument. See
+---                     |:command-completion|
+---                   • highlight (function) Function that will be
+---                     used for highlighting user inputs.
+--- @param on_confirm any #function ((input|nil) -> ()) Called once the
+---                   user confirms or abort the input. `input` is
+---                   what the user typed. `nil` if the user
+---                   aborted the dialog.
+function vim.ui.input(opts, on_confirm) end
+
+-- Prompts the user to pick a single item from a collection of
+-- entries
+--- @param items any #table Arbitrary items
+--- @param opts any #table Additional options
+---                  • prompt (string|nil) Text of the prompt.
+---                    Defaults to `Select one of:`
+---                  • format_item (function item -> text)
+---                    Function to format an individual item from
+---                    `items`. Defaults to `tostring`.
+---                  • kind (string|nil) Arbitrary hint string
+---                    indicating the item shape. Plugins
+---                    reimplementing `vim.ui.select` may wish to
+---                    use this to infer the structure or
+---                    semantics of `items`, or the context in
+---                    which select() was called.
+--- @param on_choice any #function ((item|nil, idx|nil) -> ()) Called
+---                  once the user made a choice. `idx` is the
+---                  1-based index of `item` within `items`. `nil`
+---                  if the user aborted the dialog.
+function vim.ui.select(items, opts, on_choice) end
 
 -- Get a URI from a bufnr
 --- @param bufnr any #number
