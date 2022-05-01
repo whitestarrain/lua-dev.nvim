@@ -1,404 +1,294 @@
 --# selene: allow(unused_variable)
 ---@diagnostic disable: unused-local
 
--- Call function {func} with the items in |List| {arglist} as
--- 		arguments.
--- 		{func} can either be a |Funcref| or the name of a function.
--- 		a:firstline and a:lastline are set to the cursor line.
--- 		Returns the return value of the called function.
--- 		{dict} is for functions with the "dict" attribute.  It will be
--- 		used to set the local variable "self". |Dictionary-function|
---- @param dict dictionary
-function vim.fn.call(func, arglist, dict) end
+-- Set option or local variable {varname} in window {winnr} to
+-- 		{val}.
+-- 		Tabs are numbered starting with one.  For the current tabpage
+-- 		use |setwinvar()|.
+-- 		{winnr} can be the window number or the |window-ID|.
+-- 		When {winnr} is zero the current window is used.
+-- 		This also works for a global or local buffer option, but it
+-- 		doesn't work for a global or local buffer variable.
+-- 		For a local buffer option the global value is unchanged.
+-- 		Note that the variable name without "w:" must be used.
+-- 		Examples: >
+-- 			:call settabwinvar(1, 1, "&list", 0)
+-- 			:call settabwinvar(3, 2, "myvar", "foobar")
+-- <		This function is not available in the |sandbox|.
+--- @return set
+function vim.fn.settabwinvar(tabnr, winnr, varname, val) end
 
--- Change properties of an existing text property type.  If a
--- 		property with this name does not exist an error is given.
--- 		The {props} argument is just like |prop_type_add()|.
---
--- 		See |text-properties| for information about text properties.
---
--- 		Can also be used as a |method|: >
--- 			GetPropName()->prop_type_change(props)
+-- Sets the |context| at {index} from the top of the
+-- 		|context-stack| to that represented by {context}.
+-- 		{context} is a Dictionary with context data (|context-dict|).
+-- 		If {index} is not given, it is assumed to be 0 (i.e.: top).
 --- @return none
-function vim.fn.prop_type_change(name, props) end
+function vim.fn.ctxset(context, index) end
 
--- Set environment variable {name} to {val}.
--- 		When {val} is |v:null| the environment variable is deleted.
--- 		See also |expr-env|.
---- @return none
-function vim.fn.setenv(name, val) end
-
--- Return the hyperbolic tangent of {expr} as a |Float| in the
--- 		range [-1, 1].
--- 		{expr} must evaluate to a |Float| or a |Number|.
--- 		Examples: >
--- 			:echo tanh(0.5)
--- <			0.462117 >
--- 			:echo tanh(-1)
--- <			-0.761594
---- @return float
-function vim.fn.tanh(expr) end
-
--- Evaluate Ruby expression {expr} and return its result
--- 		converted to Vim data structures.
--- 		Numbers, floats and strings are returned as they are (strings
--- 		are copied though).
--- 		Arrays are represented as Vim |List| type.
--- 		Hashes are represented as Vim |Dictionary| type.
--- 		Other objects are represented as strings resulted from their
--- 		"Object#to_s" method.
---
--- 		Can also be used as a |method|: >
--- 			GetRubyExpr()->rubyeval()
---
--- <		{only available when compiled with the |+ruby| feature}
-function vim.fn.rubyeval(expr) end
-
--- Return the arc tangent of {expr1} / {expr2}, measured in
--- 		radians, as a |Float| in the range [-pi, pi].
--- 		{expr1} and {expr2} must evaluate to a |Float| or a |Number|.
--- 		Examples: >
--- 			:echo atan2(-1, 1)
--- <			-0.785398 >
--- 			:echo atan2(1, -1)
--- <			2.356194
---- @return float
-function vim.fn.atan2(expr, expr) end
-
--- Return the power of {x} to the exponent {y} as a |Float|.
--- 		{x} and {y} must evaluate to a |Float| or a |Number|.
--- 		Examples: >
--- 			:echo pow(3, 3)
--- <			27.0 >
--- 			:echo pow(2, 16)
--- <			65536.0 >
--- 			:echo pow(32, 0.20)
--- <			2.0
---- @return float
-function vim.fn.pow(x, y) end
-
--- Return the remainder of {expr1} / {expr2}, even if the
--- 		division is not representable.  Returns {expr1} - i * {expr2}
--- 		for some integer i such that if {expr2} is non-zero, the
--- 		result has the same sign as {expr1} and magnitude less than
--- 		the magnitude of {expr2}.  If {expr2} is zero, the value
--- 		returned is zero.  The value returned is a |Float|.
--- 		{expr1} and {expr2} must evaluate to a |Float| or a |Number|.
--- 		Examples: >
--- 			:echo fmod(12.33, 1.22)
--- <			0.13 >
--- 			:echo fmod(-12.33, 1.22)
--- <			-0.13
---- @return float
-function vim.fn.fmod(expr1, expr2) end
-
--- The result is a String that contains the base character and
--- 		any composing characters at position [row, col] on the screen.
--- 		This is like |screenchars()| but returning a String with the
--- 		characters.
--- 		This is mainly to be used for testing.
--- 		Returns an empty String when row or col is out of range.
---
--- 		Can also be used as a |method|: >
--- 			GetRow()->screenstring(col)
---- @return string
-function vim.fn.screenstring(row, col) end
-
--- {expr} can be a list or a dictionary.  For a dictionary,
--- 		it returns the minimum of all values in the dictionary.
--- 		If {expr} is neither a list nor a dictionary, or one of the
--- 		items in {expr} cannot be used as a Number this results in
--- 		an error.  An empty |List| or |Dictionary| results in zero.
+-- Returns the effective value of 'shiftwidth'. This is the
+-- 		'shiftwidth' value unless it is zero, in which case it is the
+-- 		'tabstop' value.  To be backwards compatible in indent
+-- 		plugins, use this: >
+-- 			if exists('*shiftwidth')
+-- 			  func s:sw()
+-- 			    return shiftwidth()
+-- 			  endfunc
+-- 			else
+-- 			  func s:sw()
+-- 			    return &sw
+-- 			  endfunc
+-- 			endif
+-- <		And then use s:sw() instead of &sw.
 --- @return number
-function vim.fn.min(expr) end
+function vim.fn.shiftwidth() end
+
+-- Convert a list of VimL objects to msgpack. Returned value is
+-- 		|readfile()|-style list. Example: >
+-- 			call writefile(msgpackdump([{}]), 'fname.mpack', 'b')
+-- <		This will write the single 0x80 byte to `fname.mpack` file
+-- 		(dictionary with zero items is represented by 0x80 byte in
+-- 		messagepack).
+--
+-- 		Limitations:				*E5004* *E5005*
+-- 		1. |Funcref|s cannot be dumped.
+-- 		2. Containers that reference themselves cannot be dumped.
+-- 		3. Dictionary keys are always dumped as STR strings.
+-- 		4. Other strings are always dumped as BIN strings.
+-- 		5. Points 3. and 4. do not apply to |msgpack-special-dict|s.
+--- @param list any[]
+--- @return list
+function vim.fn.msgpackdump(list) end
+
+-- Returns |standard-path| locations of various default files and
+-- 		directories.
+--
+-- 		{what}       Type    Description ~
+-- 		cache        String  Cache directory. Arbitrary temporary
+-- 		                     storage for plugins, etc.
+-- 		config       String  User configuration directory. The
+-- 		                     |init.vim| is stored here.
+-- 		config_dirs  List    Additional configuration directories.
+-- 		data         String  User data directory. The |shada-file|
+-- 		                     is stored here.
+-- 		data_dirs    List    Additional data directories.
+--
+-- 		Example: >
+-- 			:echo stdpath("config")
+--- @return string/list
+function vim.fn.stdpath(what) end
+
+-- Set a callback for buffer {buf} to {expr}.  When {expr} is an
+-- 		empty string the callback is removed.  This has only effect if
+-- 		{buf} has 'buftype' set to "prompt".
+--
+-- 		This callback will be invoked when pressing CTRL-C in Insert
+-- 		mode.  Without setting a callback Vim will exit Insert mode,
+-- 		as in any buffer.
+--- @return none
+function vim.fn.prompt_setinterrupt(buf, text) end
+
+-- Convert a |readfile()|-style list to a list of VimL objects.
+-- 		Example: >
+-- 			let fname = expand('~/.config/nvim/shada/main.shada')
+-- 			let mpack = readfile(fname, 'b')
+-- 			let shada_objects = msgpackparse(mpack)
+-- <		This will read ~/.config/nvim/shada/main.shada file to
+-- 		`shada_objects` list.
+--
+-- 		Limitations:
+-- 		1. Mapping ordering is not preserved unless messagepack
+-- 		   mapping is dumped using generic  mapping
+-- 		   (|msgpack-special-map|).
+-- 		2. Since the parser aims to preserve all data untouched
+-- 		   (except for 1.) some strings are parsed to
+-- 		   |msgpack-special-dict| format which is not convenient to
+-- 		   use.
+-- 							*msgpack-special-dict*
+-- 		Some messagepack strings may be parsed to special
+-- 		dictionaries. Special dictionaries are dictionaries which
+--
+-- 		1. Contain exactly two keys: `_TYPE` and `_VAL`.
+-- 		2. `_TYPE` key is one of the types found in |v:msgpack_types|
+-- 		   variable.
+-- 		3. Value for `_VAL` has the following format (Key column
+-- 		   contains name of the key from |v:msgpack_types|):
+--
+-- 		Key	Value ~
+-- 		nil	Zero, ignored when dumping.  Not returned by
+-- 			|msgpackparse()| since |v:null| was introduced.
+-- 		boolean	One or zero.  When dumping it is only checked that
+-- 			value is a |Number|.  Not returned by |msgpackparse()|
+-- 			since |v:true| and |v:false| were introduced.
+-- 		integer	|List| with four numbers: sign (-1 or 1), highest two
+-- 			bits, number with bits from 62nd to 31st, lowest 31
+-- 			bits. I.e. to get actual number one will need to use
+-- 			code like >
+-- 				_VAL[0] * ((_VAL[1] << 62)
+-- 				           & (_VAL[2] << 31)
+-- 				           & _VAL[3])
+-- <			Special dictionary with this type will appear in
+-- 			|msgpackparse()| output under one of the following
+-- 			circumstances:
+-- 			1. |Number| is 32-bit and value is either above
+-- 			   INT32_MAX or below INT32_MIN.
+-- 			2. |Number| is 64-bit and value is above INT64_MAX. It
+-- 			   cannot possibly be below INT64_MIN because msgpack
+-- 			   C parser does not support such values.
+-- 		float	|Float|. This value cannot possibly appear in
+-- 			|msgpackparse()| output.
+-- 		string	|readfile()|-style list of strings. This value will
+-- 			appear in |msgpackparse()| output if string contains
+-- 			zero byte or if string is a mapping key and mapping is
+-- 			being represented as special dictionary for other
+-- 			reasons.
+-- 		binary	|readfile()|-style list of strings. This value will
+-- 			appear in |msgpackparse()| output if binary string
+-- 			contains zero byte.
+-- 		array	|List|. This value cannot appear in |msgpackparse()|
+-- 			output.
+-- 							*msgpack-special-map*
+-- 		map	|List| of |List|s with two items (key and value) each.
+-- 			This value will appear in |msgpackparse()| output if
+-- 			parsed mapping contains one of the following keys:
+-- 			1. Any key that is not a string (including keys which
+-- 			   are binary strings).
+-- 			2. String with NUL byte inside.
+-- 			3. Duplicate key.
+-- 			4. Empty key.
+-- 		ext	|List| with two values: first is a signed integer
+-- 			representing extension type. Second is
+-- 			|readfile()|-style list of strings.
+--- @param list any[]
+--- @return list
+function vim.fn.msgpackparse(list) end
+
+-- Evaluate Python expression {expr} and return its result
+-- 		converted to Vim data structures.
+-- 		Numbers and strings are returned as they are (strings are
+-- 		copied though, Unicode strings are additionally converted to
+-- 		UTF-8).
+-- 		Lists are represented as Vim |List| type.
+-- 		Dictionaries are represented as Vim |Dictionary| type with
+-- 		keys converted to strings.
+function vim.fn.py3eval(expr) end
+
+-- Evaluate Python expression {expr} and return its result
+-- 		converted to Vim data structures.
+-- 		Uses Python 2 or 3, see |python_x| and 'pyxversion'.
+-- 		See also: |pyeval()|, |py3eval()|
+function vim.fn.pyxeval(expr) end
+
+-- Check for a key typed while looking for completion matches.
+-- 		This is to be used when looking for matches takes some time.
+-- 		Returns |TRUE| when searching for matches is to be aborted,
+-- 		zero otherwise.
+-- 		Only to be used by the function specified with the
+-- 		'completefunc' option.
+--- @return number
+function vim.fn.complete_check() end
+
+-- Pretend using scrollbar {which} to move it to position
+-- 		{value}.  {which} can be:
+-- 			left	Left scrollbar of the current window
+-- 			right	Right scrollbar of the current window
+-- 			hor	Horizontal scrollbar
+--
+-- 		For the vertical scrollbars {value} can be 1 to the
+-- 		line-count of the buffer.  For the horizontal scrollbar the
+-- 		{value} can be between 1 and the maximum line length, assuming
+-- 		'wrap' is not set.
+--
+-- 		When {dragging} is non-zero it's like dragging the scrollbar,
+-- 		otherwise it's like clicking in the scrollbar.
+-- 		Only works when the {which} scrollbar actually exists,
+-- 		obviously only when using the GUI.
+--
+-- 		Can also be used as a |method|: >
+-- 			GetValue()->test_scrollbar('right', 0)
+--- @return none
+function vim.fn.test_scrollbar(which, value, dragging) end
+
+-- Return the name of the undo file that would be used for a file
+-- 		with name {name} when writing.  This uses the 'undodir'
+-- 		option, finding directories that exist.  It does not check if
+-- 		the undo file exists.
+-- 		{name} is always expanded to the full path, since that is what
+-- 		is used internally.
+-- 		If {name} is empty undofile() returns an empty string, since a
+-- 		buffer without a file name will not write an undo file.
+-- 		Useful in combination with |:wundo| and |:rundo|.
+-- 		When compiled without the |+persistent_undo| option this always
+-- 		returns an empty string.
+--- @return string
+function vim.fn.undofile(name) end
+
+-- Return a Float that represents the time value of {time}.
+-- 		Unit of time is seconds.
+-- 		Example:
+-- 			let start = reltime()
+-- 			call MyFunction()
+-- 			let seconds = reltimefloat(reltime(start))
+-- 		See the note of reltimestr() about overhead.
+--  		Also see |profiling|.
+--- @return float
+function vim.fn.reltimefloat(time) end
+
+-- The result is a Number, which is 1 when a file with the
+-- 		name {file} exists, and can be written.  If {file} doesn't
+-- 		exist, or is not writable, the result is 0.  If {file} is a
+-- 		directory, and we can write to it, the result is 2.
+--- @return number
+function vim.fn.filewritable(file) end
+
+-- The result is a list with two numbers, the result of
+-- 		getwinposx() and getwinposy() combined:
+-- 			[x-pos, y-pos]
+-- 		{timeout} can be used to specify how long to wait in msec for
+-- 		a response from the terminal.  When omitted 100 msec is used.
+--- @return list
+function vim.fn.getwinpos(timeout) end
+
+-- Send the {string} to {server}.  The string is sent as an
+-- 		expression and the result is returned after evaluation.
+-- 		The result must be a String or a |List|.  A |List| is turned
+-- 		into a String by joining the items with a line break in
+-- 		between (not at the end), like with join(expr, "\n").
+-- 		If {idvar} is present and not empty, it is taken as the name
+-- 		of a variable and a {serverid} for later use with
+-- 		|remote_read()| is stored there.
+-- 		If {timeout} is given the read times out after this many
+-- 		seconds.  Otherwise a timeout of 600 seconds is used.
+-- 		See also |clientserver| |RemoteReply|.
+-- 		This function is not available in the |sandbox|.
+-- 		Note: Any errors will cause a local error message to be issued
+-- 		and the result will be the empty string.
+--
+-- 		Variables will be evaluated in the global namespace,
+-- 		independent of a function currently being active.  Except
+-- 		when in debug mode, then local function variables and
+-- 		arguments can be evaluated.
+--
+-- 		Examples: >
+-- 			:echo remote_expr("gvim", "2+2")
+-- 			:echo remote_expr("gvim1", "b:current_syntax")
+-- <
+--- @return string
+function vim.fn.remote_expr(server, string, idvar, timeout) end
 
 --- @param list any[]
 --- @return list
 function vim.fn.sign_placelist(list) end
 
--- Stop playing all sounds.
--- 		{only available when compiled with the |+sound| feature}
---- @return none
-function vim.fn.sound_clear() end
-
--- Like `sound_playevent()` but play sound file {path}.  {path}
--- 		must be a full path.  On Ubuntu you may find files to play
--- 		with this command: >
--- 		    :!find /usr/share/sounds -type f | grep -v index.theme
---
--- <		Can also be used as a |method|: >
--- 			GetSoundPath()->sound_playfile()
---
--- <		{only available when compiled with the |+sound| feature}
+-- Move the Vim server with the name {server} to the foreground.
+-- 		This works like: >
+-- 			remote_expr({server}, "foreground()")
+-- <		Except that on Win32 systems the client does the work, to work
+-- 		around the problem that the OS doesn't always allow the server
+-- 		to bring itself to the foreground.
+-- 		Note: This does not restore the window if it was minimized,
+-- 		like foreground() does.
+-- 		This function is not available in the |sandbox|.
+-- 		{only in the Win32 GUI and the Win32 console version}
 --- @return number
-function vim.fn.sound_playfile(path, callback) end
-
--- Stop playing sound {id}.  {id} must be previously returned by
--- 		`sound_playevent()` or `sound_playfile()`.
---
--- 		On MS-Windows, this does not work for event sound started by
--- 		`sound_playevent()`. To stop event sounds, use `sound_clear()`.
---
--- 		Can also be used as a |method|: >
--- 			soundid->sound_stop()
---
--- <		{only available when compiled with the |+sound| feature}
---- @return none
-function vim.fn.sound_stop(id) end
-
--- Set the size of terminal {buf}. The size of the window
--- 		containing the terminal will also be adjusted, if possible.
--- 		If {rows} or {cols} is zero or negative, that dimension is not
--- 		changed.
---
--- 		{buf} must be the buffer number of a terminal window.  Use an
--- 		empty string for the current buffer.  If the buffer does not
--- 		exist or is not a terminal window, an error is given.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_setsize(rows, cols)
---- @return none
-function vim.fn.term_setsize(buf, rows, cols) end
-
--- Initialize seed used by |rand()|:
--- 		- If {expr} is not given, seed values are initialized by
--- 		  reading from /dev/urandom, if possible, or using time(NULL)
--- 		  a.k.a. epoch time otherwise; this only has second accuracy.
--- 		- If {expr} is given it must be a Number.  It is used to
--- 		  initialize the seed values.  This is useful for testing or
--- 		  when a predictable sequence is intended.
---
--- 		Examples: >
--- 			:let seed = srand()
--- 			:let seed = srand(userinput)
--- 			:echo rand(seed)
---- @return list
-function vim.fn.srand(expr) end
-
--- Return all of environment variables as dictionary. You can
--- 		check if an environment variable exists like this: >
--- 			:echo has_key(environ(), 'HOME')
--- <		Note that the variable name may be CamelCase; to ignore case
--- 		use this: >
--- 			:echo index(keys(environ()), 'HOME', 0, 1) != -1
---- @return dict
-function vim.fn.environ() end
-
--- Open a new window displaying the difference between the two
--- 		files.  The files must have been created with
--- 		|term_dumpwrite()|.
--- 		Returns the buffer number or zero when the diff fails.
--- 		Also see |terminal-diff|.
--- 		NOTE: this does not work with double-width characters yet.
---
--- 		The top part of the buffer contains the contents of the first
--- 		file, the bottom part of the buffer contains the contents of
--- 		the second file.  The middle part shows the differences.
--- 		The parts are separated by a line of equals.
---
--- 		If the {options} argument is present, it must be a Dict with
--- 		these possible members:
--- 		   "term_name"	     name to use for the buffer name, instead
--- 				     of the first file name.
--- 		   "term_rows"	     vertical size to use for the terminal,
--- 				     instead of using 'termwinsize'
--- 		   "term_cols"	     horizontal size to use for the terminal,
--- 				     instead of using 'termwinsize'
--- 		   "vertical"	     split the window vertically
--- 		   "curwin"	     use the current window, do not split the
--- 				     window; fails if the current buffer
--- 				     cannot be |abandon|ed
--- 		   "bufnr"	     do not create a new buffer, use the
--- 				     existing buffer "bufnr".  This buffer
--- 				     must have been previously created with
--- 				     term_dumpdiff() or term_dumpload() and
--- 				     visible in a window.
--- 		   "norestore"	     do not add the terminal window to a
--- 				     session file
---
--- 		Each character in the middle part indicates a difference. If
--- 		there are multiple differences only the first in this list is
--- 		used:
--- 			X	different character
--- 			w	different width
--- 			f	different foreground color
--- 			b	different background color
--- 			a	different attribute
--- 			+	missing position in first file
--- 			-	missing position in second file
---
--- 		Using the "s" key the top and bottom parts are swapped.  This
--- 		makes it easy to spot a difference.
---
--- 		Can also be used as a |method|: >
--- 			GetFilename()->term_dumpdiff(otherfile)
--- <
---- @return number
-function vim.fn.term_dumpdiff(filename, filename, options) end
-
--- Returns 1 if the terminal of {buf} is using the alternate
--- 		screen.
--- 		{buf} is used as with |term_getsize()|.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_getaltscreen()
---- @return number
-function vim.fn.term_getaltscreen(buf) end
-
--- Get the cursor position of terminal {buf}. Returns a list with
--- 		two numbers and a dictionary: [row, col, dict].
---
--- 		"row" and "col" are one based, the first screen cell is row
--- 		1, column 1.  This is the cursor position of the terminal
--- 		itself, not of the Vim window.
---
--- 		"dict" can have these members:
--- 		   "visible"	one when the cursor is visible, zero when it
--- 				is hidden.
--- 		   "blink"	one when the cursor is blinking, zero when it
--- 				is not blinking.
--- 		   "shape"	1 for a block cursor, 2 for underline and 3
--- 				for a vertical bar.
--- 		   "color"	color of the cursor, e.g. "green"
---
--- 		{buf} must be the buffer number of a terminal window. If the
--- 		buffer does not exist or is not a terminal window, an empty
--- 		list is returned.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_getcursor()
---- @return list
-function vim.fn.term_getcursor(buf) end
-
--- Get a line of text from the terminal window of {buf}.
--- 		{buf} is used as with |term_getsize()|.
---
--- 		The first line has {row} one.  When {row} is "." the cursor
--- 		line is used.  When {row} is invalid an empty string is
--- 		returned.
---
--- 		To get attributes of each character use |term_scrape()|.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_getline(row)
---- @return string
-function vim.fn.term_getline(buf, row) end
-
--- Return the position of the cursor in the command line as a
--- 		byte count.  The first column is 1.
--- 		Only works when editing the command line, thus requires use of
--- 		|c_CTRL-\_e| or |c_CTRL-R_=| or an expression mapping.
--- 		Returns 0 otherwise.
--- 		Also see |getcmdtype()|, |setcmdpos()| and |getcmdline()|.
---- @return number
-function vim.fn.getcmdpos() end
-
--- Return byte index of the {nr}'th character in the string
--- 		{expr}.  Use zero for the first character, it returns zero.
--- 		This function is only useful when there are multibyte
--- 		characters, otherwise the returned value is equal to {nr}.
--- 		Composing characters are not counted separately, their byte
--- 		length is added to the preceding base character.  See
--- 		|byteidxcomp()| below for counting composing characters
--- 		separately.
--- 		Example : >
--- 			echo matchstr(str, ".", byteidx(str, 3))
--- <		will display the fourth character.  Another way to do the
--- 		same: >
--- 			let s = strpart(str, byteidx(str, 3))
--- 			echo strpart(s, 0, byteidx(s, 1))
--- <		Also see |strgetchar()| and |strcharpart()|.
---
--- 		If there are less than {nr} characters -1 is returned.
--- 		If there are exactly {nr} characters the length of the string
--- 		in bytes is returned.
---- @return number
-function vim.fn.byteidx(expr, nr) end
-
--- Get the size of terminal {buf}. Returns a list with two
--- 		numbers: [rows, cols].  This is the size of the terminal, not
--- 		the window containing the terminal.
---
--- 		{buf} must be the buffer number of a terminal window.  Use an
--- 		empty string for the current buffer.  If the buffer does not
--- 		exist or is not a terminal window, an empty list is returned.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_getsize()
---- @return list
-function vim.fn.term_getsize(buf) end
-
--- Get the status of terminal {buf}. This returns a comma
--- 		separated list of these items:
--- 			running		job is running
--- 			finished	job has finished
--- 			normal		in Terminal-Normal mode
--- 		One of "running" or "finished" is always present.
---
--- 		{buf} must be the buffer number of a terminal window. If the
--- 		buffer does not exist or is not a terminal window, an empty
--- 		string is returned.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_getstatus()
---- @return string
-function vim.fn.term_getstatus(buf) end
-
--- {expr} can be a list or a dictionary.  For a dictionary,
--- 		it returns the maximum of all values in the dictionary.
--- 		If {expr} is neither a list nor a dictionary, or one of the
--- 		items in {expr} cannot be used as a Number this results in
---                 an error.  An empty |List| or |Dictionary| results in zero.
---- @return number
-function vim.fn.max(expr) end
-
--- Get the title of terminal {buf}. This is the title that the
--- 		job in the terminal has set.
---
--- 		{buf} must be the buffer number of a terminal window. If the
--- 		buffer does not exist or is not a terminal window, an empty
--- 		string is returned.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_gettitle()
---- @return string
-function vim.fn.term_gettitle(buf) end
-
--- includes an extra item in the list:
--- 		    [bufnum, lnum, col, off, curswant] ~
---  		The "curswant" number is the preferred column when moving the
--- 		cursor vertically.  Also see |getpos()|.
---
---  		This can be used to save and restore the cursor position: >
---  			let save_cursor = getcurpos()
---  			MoveTheCursorAround
---  			call setpos('.', save_cursor)
--- <		Note that this only works within the window.  See
--- 		|winrestview()| for restoring more state.
---- @return list
-function vim.fn.getcurpos() end
-
--- Get the name of the controlling terminal associated with
--- 		terminal window {buf}.  {buf} is used as with |term_getsize()|.
---
--- 		When {input} is omitted or 0, return the name for writing
--- 		(stdout). When {input} is 1 return the name for reading
--- 		(stdin). On UNIX, both return same name.
---
--- 		Can also be used as a |method|: >
--- 			GetBufnr()->term_gettty()
---- @return string
-function vim.fn.term_gettty(buf, input) end
-
--- Like |settabwinvar()| for the current tab page.
--- 		Examples: >
--- 			:call setwinvar(1, "&list", 0)
--- 			:call setwinvar(2, "myvar", "foobar")
---- @return set
-function vim.fn.setwinvar(nr, varname, val) end
-
--- Return a list with the buffer numbers of all buffers for
--- 		terminal windows.
---- @return list
-function vim.fn.term_list() end
+function vim.fn.remote_foreground(server) end
 

@@ -123,24 +123,6 @@ function vim.treesitter.TSHighlighter:destroy() end
 --- @param lang any #A language used by the highlighter.
 function vim.treesitter.TSHighlighter:get_query(lang) end
 
--- Adds a new directive to be used in queries
---- @param name any #the name of the directive, without leading #
---- @param handler any #the handler function to be used signature will
----                be (match, pattern, bufnr, predicate)
-function vim.treesitter.add_directive(name, handler, force) end
-
--- Adds a new predicate to be used in queries
---- @param name any #the name of the predicate, without leading #
---- @param handler any #the handler function to be used signature will
----                be (match, pattern, bufnr, predicate)
-function vim.treesitter.add_predicate(name, handler, force) end
-
--- Gets the text corresponding to a given node
---- @param node any #the node
---- @param source any #The buffer or string from which the node is
----               extracted
-function vim.treesitter.get_node_text(node, source) end
-
 -- Gets the parser for this bufnr / ft combination.
 --- @param bufnr any #The buffer the parser should be tied to
 --- @param lang any #The filetype of this parser
@@ -148,19 +130,6 @@ function vim.treesitter.get_node_text(node, source) end
 ---              tree
 --- @return any #The parser
 function vim.treesitter.get_parser(bufnr, lang, opts) end
-
--- Returns the runtime query {query_name} for {lang}.
---- @param lang any #The language to use for the query
---- @param query_name any #The name of the query (i.e. "highlights")
---- @return any #The corresponding query, parsed.
-function vim.treesitter.get_query(lang, query_name) end
-
--- Gets the list of files used to make up a query
---- @param lang any #The language
---- @param query_name any #The name of the query to load
---- @param is_included any #Internal parameter, most of the time left
----                    as `nil`
-function vim.treesitter.get_query_files(lang, query_name, is_included) end
 
 -- Gets a string parser
 --- @param str any #The string to parse
@@ -172,12 +141,6 @@ function vim.treesitter.get_string_parser(str, lang, opts) end
 --- @param lang any #The language.
 function vim.treesitter.inspect_language(lang) end
 
---- @return any #The list of supported directives.
-function vim.treesitter.list_directives() end
-
---- @return any #The list of supported predicates.
-function vim.treesitter.list_predicates() end
-
 -- Represents a single treesitter parser for a language. The
 -- language can contain child languages with in its range, hence
 -- the tree.
@@ -187,20 +150,50 @@ function vim.treesitter.list_predicates() end
 --- @param opts any #Options table
 function vim.treesitter.new(source, lang, opts) end
 
+-- Adds a new directive to be used in queries
+--- @param name any #the name of the directive, without leading #
+--- @param handler any #the handler function to be used signature will
+---                be (match, pattern, bufnr, predicate)
+function vim.treesitter.query.add_directive(name, handler, force) end
+
+-- Adds a new predicate to be used in queries
+--- @param name any #the name of the predicate, without leading #
+--- @param handler any #the handler function to be used signature will
+---                be (match, pattern, bufnr, predicate)
+function vim.treesitter.query.add_predicate(name, handler, force) end
+
+-- Gets the text corresponding to a given node
+--- @param node any #the node
+--- @param source any #The buffer or string from which the node is
+---               extracted
+function vim.treesitter.query.get_node_tex(node, source) end
+
+-- Returns the runtime query {query_name} for {lang}.
+--- @param lang any #The language to use for the query
+--- @param query_name any #The name of the query (i.e. "highlights")
+--- @return any #The corresponding query, parsed.
+function vim.treesitter.query.get_query(lang, query_name) end
+
+-- Gets the list of files used to make up a query
+--- @param lang any #The language
+--- @param query_name any #The name of the query to load
+--- @param is_included any #Internal parameter, most of the time left
+---                    as `nil`
+function vim.treesitter.query.get_query_files(lang, query_name, is_included) end
+
+--- @return any #The list of supported directives.
+function vim.treesitter.query.list_directives() end
+
+--- @return any #The list of supported predicates.
+function vim.treesitter.query.list_predicates() end
+
 -- Parse {query} as a string. (If the query is in a file, the
 -- caller should read the contents into a string before calling).
 --- @param lang any #string The language
 --- @param query any #string A string containing the query (s-expr
 ---              syntax)
 --- @return any #The query
-function vim.treesitter.parse_query(lang, query) end
-
--- Asserts that the provided language is installed, and
--- optionally provide a path for the parser
---- @param lang any #The language the parser should parse
---- @param path any #Optional path the parser is located at
---- @param silent any #Don't throw an error if language not found
-function vim.treesitter.require_language(lang, path, silent) end
+function vim.treesitter.query.parse_query(lang, query) end
 
 -- The explicitly set queries from
 -- |vim.treesitter.query.set_query()|.
@@ -208,5 +201,12 @@ function vim.treesitter.require_language(lang, path, silent) end
 --- @param query_name any #string: The name of the query (i.e.
 ---                   "highlights")
 --- @param text any #string: The query text (unparsed).
-function vim.treesitter.set_query(lang, query_name, text) end
+function vim.treesitter.query.set_query(lang, query_name, text) end
+
+-- Asserts that the provided language is installed, and
+-- optionally provide a path for the parser
+--- @param lang any #The language the parser should parse
+--- @param path any #Optional path the parser is located at
+--- @param silent any #Don't throw an error if language not found
+function vim.treesitter.require_language(lang, path, silent) end
 

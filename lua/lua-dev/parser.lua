@@ -144,6 +144,15 @@ local vim_modules = {
     ["input"] = "ui.input",
     ["set"] = "keymap.set",
     ["del"] = "keymap.del",
+    ["add_directive"] = "query.add_directive",
+    ["add_predicate"] = "query.add_predicate",
+    ["get_node_text"] = "query.get_node_tex",
+    ["get_query"] = "query.get_query",
+    ["get_query_files"] = "query.get_query_files",
+    ["list_directives"] = "query.list_directives",
+    ["list_predicates"] = "query.list_predicates",
+    ["parse_query"] = "query.parse_query",
+    ["set_query"] = "query.set_query",
 }
 
 function M.get_functions(mpack)
