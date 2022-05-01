@@ -17,7 +17,7 @@ function vim.api.nvim__get_lib_dir() end
 -- Find files in runtime directories
 --- @param pat array #pattern of files to search for
 --- @param all boolean #whether to return all matches or only the first
---- @param opts dict(runtime) *
+--- @param opts dict(runtime) * #is_lua: only search lua subdirs
 --- @return any #list of absolute paths to the found files
 function vim.api.nvim__get_runtime(pat, all, opts) end
 
@@ -492,9 +492,9 @@ function vim.api.nvim_buf_set_option(buffer, name, value) end
 -- Sets (replaces) a range in the buffer
 --- @param buffer buffer #Buffer handle, or 0 for current buffer
 --- @param start_row integer #First line index
---- @param start_col integer
+--- @param start_col integer #First column
 --- @param end_row integer #Last line index
---- @param end_col integer
+--- @param end_col integer #Last column
 --- @param replacement string[] #Array of lines to use as replacement
 function vim.api.nvim_buf_set_text(buffer, start_row, start_col, end_row, end_col, replacement) end
 
@@ -862,7 +862,7 @@ function vim.api.nvim_get_autocmds(opts) end
 ---     • "pty" (optional) Name of pseudoterminal. On a POSIX
 ---       system this is a device path like "/dev/pts/1". If the
 ---       name is unknown, the key will still be present if a pty
----       is used (e.g. for winpty on Windows).
+---       is used (e.g. for conpty on Windows).
 ---     • "buffer" (optional) Buffer with connected |terminal|
 ---       instance.
 ---     • "client" (optional) Info about the peer (client on the

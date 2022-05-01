@@ -140,14 +140,24 @@ function vim.lsp.client_is_stopped(client_id) end
 
 -- Selects a code action available at the current cursor
 -- position.
---- @param context any #table|nil `CodeActionContext` of the LSP specification:
----                • diagnostics: (table|nil) LSP`Diagnostic[]` . Inferred from the current position if not
----                  provided.
----                • only: (string|nil) LSP `CodeActionKind` used
----                  to filter the code actions. Most language
----                  servers support values like `refactor` or
----                  `quickfix`.
-function vim.lsp.code_action(context) end
+--- @param options any #table|nil Optional table which holds the
+---                following optional fields:
+---                • context (table|nil): Corresponds to `CodeActionContext` of the LSP specification:
+---                  • diagnostics (table|nil): LSP`Diagnostic[]` . Inferred from the current position if not
+---                    provided.
+---                  • only (string|nil): LSP `CodeActionKind`
+---                    used to filter the code actions. Most
+---                    language servers support values like
+---                    `refactor` or `quickfix`.
+---
+---                • filter (function|nil): Predicate function
+---                  taking an `CodeAction` and returning a
+---                  boolean.
+---                • apply (boolean|nil): When set to `true`, and
+---                  there is just one remaining action (after
+---                  filtering), the action is applied without
+---                  user query.
+function vim.lsp.code_action(options) end
 
 -- Retrieves the completion items at the current cursor position.
 -- Can only be called in Insert mode.
@@ -248,6 +258,16 @@ function vim.lsp.extract_completion_items(result) end
 --- <
 function vim.lsp.for_each_buffer_client(bufnr, fn) end
 
+-- Formats a buffer using the attached (and optionally filtered)
+-- language server clients.
+--- @param options any #table|nil Optional table which holds the
+---                following optional fields:
+---                • formatting_options (table|nil): Can be used
+---                  to specify FormattingOptions. Some
+---                  unspecified options will be automatically
+---                  derived from the current Neovim options.
+function vim.lsp.format(options) end
+
 -- Mapping of error codes used by the client.
 --- @return any #(string) The formatted error message
 function vim.lsp.format_rpc_error() end
@@ -262,7 +282,7 @@ function vim.lsp.format_rpc_error() end
 function vim.lsp.formatexpr(opts) end
 
 -- Formats the current buffer.
---- @param options any #(optional, table) Can be used to specify
+--- @param options any #(table|nil) Can be used to specify
 ---                FormattingOptions. Some unspecified options
 ---                will be automatically derived from the current
 ---                Neovim options.
@@ -270,19 +290,18 @@ function vim.lsp.formatting(options) end
 
 -- Formats the current buffer by sequentially requesting
 -- formatting from attached clients.
---- @param options any #(optional, table) `FormattingOptions`
----                   entries
---- @param timeout_ms any #(optional, number) Request timeout
---- @param order any #(optional, table) List of client names.
----                   Formatting is requested from clients in the
----                   following order: first all clients that are
----                   not in the `order` list, then the remaining
----                   clients in the order as they occur in the
----                   `order` list.
+--- @param options any #(table|nil) `FormattingOptions` entries
+--- @param timeout_ms any #(number|nil) Request timeout
+--- @param order any #(table|nil) List of client names. Formatting
+---                   is requested from clients in the following
+---                   order: first all clients that are not in the
+---                   `order` list, then the remaining clients in
+---                   the order as they occur in the `order` list.
 function vim.lsp.formatting_seq_sync(options, timeout_ms, order) end
 
 -- Performs |vim.lsp.buf.formatting()| synchronously.
---- @param options any #Table with valid `FormattingOptions` entries
+--- @param options any #table|nil with valid `FormattingOptions`
+---                   entries
 --- @param timeout_ms any #(number) Request timeout
 function vim.lsp.formatting_sync(options, timeout_ms) end
 
@@ -308,8 +327,7 @@ function vim.lsp.get_buffers_by_client_id(client_id) end
 function vim.lsp.get_client_by_id(client_id) end
 
 -- Returns indentation size.
---- @param bufnr any #(optional, number): Buffer handle, defaults to
----              current
+--- @param bufnr any #(number|nil): Buffer handle, defaults to current
 --- @return any #(number) indentation size
 function vim.lsp.get_effective_tabstop(bufnr) end
 
@@ -404,7 +422,8 @@ function vim.lsp.make_floating_popup_options(width, height, opts) end
 
 -- Creates a `DocumentFormattingParams` object for the current
 -- buffer and cursor position.
---- @param options any #Table with valid `FormattingOptions` entries
+--- @param options any #table|nil with valid `FormattingOptions`
+---                entries
 --- @return any #`DocumentFormattingParams` object
 function vim.lsp.make_formatting_params(options) end
 
@@ -585,8 +604,8 @@ function vim.lsp.rename(old_fname, new_fname, opts) end
 --- @param params any #(table) Parameters for the
 ---                              invoked LSP method
 --- @param callback any #(function) Callback to invoke
---- @param notify_reply_callback any #(function) Callback to invoke as
----                              soon as a request is no longer
+--- @param notify_reply_callback any #(function|nil) Callback to invoke
+---                              as soon as a request is no longer
 ---                              pending
 --- @return any #(bool, number) `(true, message_id)` if request could be
 ---     sent, `false` if not

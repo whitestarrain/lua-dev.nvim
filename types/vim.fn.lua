@@ -1,221 +1,169 @@
 --# selene: allow(unused_variable)
 ---@diagnostic disable: unused-local
 
--- see |line()|.  For getting the cursor position see
--- 		|getcurpos()|.
--- 		The result is a |List| with four numbers:
--- 		    [bufnum, lnum, col, off]
--- 		"bufnum" is zero, unless a mark like '0 or 'A is used, then it
--- 		is the buffer number of the mark.
--- 		"lnum" and "col" are the position in the buffer.  The first
--- 		column is 1.
--- 		The "off" number is zero, unless 'virtualedit' is used.  Then
--- 		it is the offset in screen columns from the start of the
--- 		character.  E.g., a position within a <Tab> or after the last
--- 		character.
--- 		Note that for '< and '> Visual mode matters: when it is "V"
--- 		(visual line mode) the column of '< is zero and the column of
--- 		'> is a large number.
--- 		This can be used to save and restore the position of a mark: >
--- 			let save_a_mark = getpos("'a")
--- 			...
--- 			call setpos("'a", save_a_mark)
--- <		Also see |getcurpos()| and |setpos()|.
---- @return list
-function vim.fn.getpos(expr) end
+-- Open a terminal window and run {cmd} in it.
+--
+-- 		{cmd} can be a string or a List, like with |job_start()|. The
+-- 		string "NONE" can be used to open a terminal window without
+-- 		starting a job, the pty of the terminal can be used by a
+-- 		command like gdb.
+--
+-- 		Returns the buffer number of the terminal window.  If {cmd}
+-- 		cannot be executed the window does open and shows an error
+-- 		message.
+-- 		If opening the window fails zero is returned.
+--
+-- 		{options} are similar to what is used for |job_start()|, see
+-- 		|job-options|.  However, not all options can be used.  These
+-- 		are supported:
+-- 		   all timeout options
+-- 		   "stoponexit", "cwd", "env"
+-- 		   "callback", "out_cb", "err_cb", "exit_cb", "close_cb"
+-- 		   "in_io", "in_top", "in_bot", "in_name", "in_buf"
+-- 		   "out_io", "out_name", "out_buf", "out_modifiable", "out_msg"
+-- 		   "err_io", "err_name", "err_buf", "err_modifiable", "err_msg"
+-- 		However, at least one of stdin, stdout or stderr must be
+-- 		connected to the terminal.  When I/O is connected to the
+-- 		terminal then the callback function for that part is not used.
+--
+-- 		There are extra options:
+-- 		   "term_name"	     name to use for the buffer name, instead
+-- 				     of the command name.
+-- 		   "term_rows"	     vertical size to use for the terminal,
+-- 				     instead of using 'termwinsize'
+-- 		   "term_cols"	     horizontal size to use for the terminal,
+-- 				     instead of using 'termwinsize'
+-- 		   "vertical"	     split the window vertically; note that
+-- 				     other window position can be defined with
+-- 				     command modifiers, such as |:belowright|.
+-- 		   "curwin"	     use the current window, do not split the
+-- 				     window; fails if the current buffer
+-- 				     cannot be |abandon|ed
+-- 		   "hidden"	     do not open a window
+-- 		   "norestore"	     do not add the terminal window to a
+-- 				     session file
+-- 		   "term_kill"	     what to do when trying to close the
+-- 				     terminal window, see |term_setkill()|
+-- 		   "term_finish"     What to do when the job is finished:
+-- 					"close": close any windows
+-- 					"open": open window if needed
+-- 				     Note that "open" can be interruptive.
+-- 				     See |term++close| and |term++open|.
+-- 		   "term_opencmd"    command to use for opening the window when
+-- 				     "open" is used for "term_finish"; must
+-- 				     have "%d" where the buffer number goes,
+-- 				     e.g. "10split|buffer %d"; when not
+-- 				     specified "botright sbuf %d" is used
+-- 		   "eof_chars"	     Text to send after all buffer lines were
+-- 				     written to the terminal.  When not set
+-- 				     CTRL-D is used on MS-Windows. For Python
+-- 				     use CTRL-Z or "exit()". For a shell use
+-- 				     "exit".  A CR is always added.
+-- 		   "ansi_colors"     A list of 16 color names or hex codes
+-- 				     defining the ANSI palette used in GUI
+-- 				     color modes.  See |g:terminal_ansi_colors|.
+-- 		   "tty_type"	     (MS-Windows only): Specify which pty to
+-- 				     use.  See 'termwintype' for the values.
+-- 		   "term_api"	     function name prefix for the
+-- 				     |terminal-api| function.  See
+-- 				     |term_setapi()|.
+--
+-- 		Can also be used as a |method|: >
+-- 			GetCommand()->term_start()
+--- @return number
+function vim.fn.term_start(cmd, options) end
 
--- Returns |standard-path| locations of various default files and
--- 		directories.
+-- Wait for pending updates of {buf} to be handled.
+-- 		{buf} is used as with |term_getsize()|.
+-- 		{time} is how long to wait for updates to arrive in msec.  If
+-- 		not set then 10 msec will be used.
 --
--- 		{what}       Type    Description ~
--- 		cache        String  Cache directory. Arbitrary temporary
--- 		                     storage for plugins, etc.
--- 		config       String  User configuration directory. The
--- 		                     |init.vim| is stored here.
--- 		config_dirs  List    Additional configuration directories.
--- 		data         String  User data directory. The |shada-file|
--- 		                     is stored here.
--- 		data_dirs    List    Additional data directories.
---
--- 		Example: >
--- 			:echo stdpath("config")
---- @return string/list
-function vim.fn.stdpath(what) end
+-- 		Can also be used as a |method|: >
+-- 			GetBufnr()->term_wait()
+--- @return number
+function vim.fn.term_wait(buf, time) end
 
--- Get information about buffers as a List of Dictionaries.
+-- Set a flag to enable the effect of 'autochdir' before Vim
+-- 		startup has finished.
+--- @return none
+function vim.fn.test_autochdir() end
+
+-- The result is a Number, which is the current screen column of
+-- 		the cursor. The leftmost column has number 1.
+-- 		This function is mainly used for testing.
 --
--- 		Without an argument information about all the buffers is
--- 		returned.
+-- 		Note: Always returns the current screen column, thus if used
+-- 		in a command (e.g. ":echo screencol()") it will return the
+-- 		column inside the command line, which is 1 when the command is
+-- 		executed. To get the cursor position in the file use one of
+-- 		the following mappings: >
+-- 			nnoremap <expr> GG ":echom ".screencol()."\n"
+-- 			nnoremap <silent> GG :echom screencol()<CR>
+-- 			noremap GG <Cmd>echom screencol()<Cr>
+--- @return number
+function vim.fn.screencol() end
+
+-- Return a |Channel| that is null. Only useful for testing.
+-- 		{only available when compiled with the +channel feature}
+--- @return channel
+function vim.fn.test_null_channel() end
+
+-- Return a |Dict| that is null. Only useful for testing.
+--- @return dict
+function vim.fn.test_null_dict() end
+
+-- Return a |Job| that is null. Only useful for testing.
+-- 		{only available when compiled with the +job feature}
+--- @return job
+function vim.fn.test_null_job() end
+
+-- Remove a previously placed sign in one or more buffers.  This
+-- 		is similar to the |:sign-unplace| command.
 --
--- 		When the argument is a Dictionary only the buffers matching
--- 		the specified criteria are returned.  The following keys can
--- 		be specified in {dict}:
--- 			buflisted	include only listed buffers.
--- 			bufloaded	include only loaded buffers.
--- 			bufmodified	include only modified buffers.
+-- 		{group} is the sign group name. To use the global sign group,
+-- 		use an empty string.  If {group} is set to '*', then all the
+-- 		groups including the global group are used.
+-- 		The signs in {group} are selected based on the entries in
+-- 		{dict}.  The following optional entries in {dict} are
+-- 		supported:
+-- 			buffer	buffer name or number. See |bufname()|.
+-- 			id	sign identifier
+-- 		If {dict} is not supplied, then all the signs in {group} are
+-- 		removed.
 --
--- 		Otherwise, {expr} specifies a particular buffer to return
--- 		information for.  For the use of {expr}, see |bufname()|
--- 		above.  If the buffer is found the returned List has one item.
--- 		Otherwise the result is an empty list.
---
--- 		Each returned List item is a dictionary with the following
--- 		entries:
--- 			bufnr		buffer number.
--- 			changed		TRUE if the buffer is modified.
--- 			changedtick	number of changes made to the buffer.
--- 			hidden		TRUE if the buffer is hidden.
--- 			listed		TRUE if the buffer is listed.
--- 			lnum		current line number in buffer.
--- 			linecount	number of lines in the buffer (only
--- 					valid when loaded)
--- 			loaded		TRUE if the buffer is loaded.
--- 			name		full path to the file in the buffer.
--- 			signs		list of signs placed in the buffer.
--- 					Each list item is a dictionary with
--- 					the following fields:
--- 					    id	  sign identifier
--- 					    lnum  line number
--- 					    name  sign name
--- 			variables	a reference to the dictionary with
--- 					buffer-local variables.
--- 			windows		list of |window-ID|s that display this
--- 					buffer
+-- 		Returns 0 on success and -1 on failure.
 --
 -- 		Examples: >
--- 			for buf in getbufinfo()
--- 			    echo buf.name
--- 			endfor
--- 			for buf in getbufinfo({'buflisted':1})
--- 			    if buf.changed
--- 				....
--- 			    endif
--- 			endfor
--- <
--- 		To get buffer-local options use: >
--- 			getbufvar({bufnr}, '&option_name')
+-- 			" Remove sign 10 from buffer a.vim
+-- 			call sign_unplace('', {'buffer' : "a.vim", 'id' : 10})
 --
--- <
---- @return list
-function vim.fn.getbufinfo(expr) end
-
--- If {arg} is not specified, then information about all the tab
--- 		pages is returned as a List. Each List item is a Dictionary.
--- 		Otherwise, {arg} specifies the tab page number and information
--- 		about that one is returned.  If the tab page does not exist an
--- 		empty List is returned.
+-- 			" Remove sign 20 in group 'g1' from buffer 3
+-- 			call sign_unplace('g1', {'buffer' : 3, 'id' : 20})
 --
--- 		Each List item is a Dictionary with the following entries:
--- 			tabnr		tab page number.
--- 			variables	a reference to the dictionary with
--- 					tabpage-local variables
--- 			windows		List of |window-ID|s in the tab page.
---- @return list
-function vim.fn.gettabinfo(expr) end
-
--- Return an item that represents a time value.  The format of
--- 		the item depends on the system.  It can be passed to
--- 		|reltimestr()| to convert it to a string or |reltimefloat()|
--- 		to convert to a float.
+-- 			" Remove all the signs in group 'g2' from buffer 10
+-- 			call sign_unplace('g2', {'buffer' : 10})
 --
--- 		Without an argument it returns the current "relative time", an
--- 		implementation-defined value meaningful only when used as an
--- 		argument to |reltime()|, |reltimestr()| and |reltimefloat()|.
+-- 			" Remove sign 30 in group 'g3' from all the buffers
+-- 			call sign_unplace('g3', {'id' : 30})
 --
--- 		With one argument it returns the time passed since the time
--- 		specified in the argument.
--- 		With two arguments it returns the time passed between {start}
--- 		and {end}.
--- 		The {start} and {end} arguments must be values returned by
--- 		reltime().
+-- 			" Remove all the signs placed in buffer 5
+-- 			call sign_unplace('*', {'buffer' : 5})
 --
--- 		Note: |localtime()| returns the current (non-relative) time.
---- @return list
-function vim.fn.reltime(start, _end) end
-
--- The result is a Number, which is the number of characters
--- 		in String {expr}.
--- 		When {skipcc} is omitted or zero, composing characters are
--- 		counted separately.
--- 		When {skipcc} set to 1, Composing characters are ignored.
--- 		Also see |strlen()|, |strdisplaywidth()| and |strwidth()|.
+-- 			" Remove the signs in group 'g4' from all the buffers
+-- 			call sign_unplace('g4')
 --
--- 		{skipcc} is only available after 7.4.755.  For backward
--- 		compatibility, you can define a wrapper function: >
--- 		    if has("patch-7.4.755")
--- 		      function s:strchars(str, skipcc)
--- 			return strchars(a:str, a:skipcc)
--- 		      endfunction
--- 		    else
--- 		      function s:strchars(str, skipcc)
--- 			if a:skipcc
--- 			  return strlen(substitute(a:str, ".", "x", "g"))
--- 			else
--- 			  return strchars(a:str)
--- 			endif
--- 		      endfunction
--- 		    endif
---- @return number
-function vim.fn.strchars(expr, skipcc) end
-
--- Like |strpart()| but using character index and length instead
--- 		of byte index and length.
--- 		When a character index is used where a character does not
--- 		exist it is assumed to be one character.  For example: >
--- 			strcharpart('abc', -1, 2)
--- <		results in 'a'.
---- @return string
-function vim.fn.strcharpart(str, start, len) end
-
--- different from using {expr} directly.
--- 		When {expr} is a |List| a shallow copy is created.  This means
--- 		that the original |List| can be changed without changing the
--- 		copy, and vice versa.  But the items are identical, thus
--- 		changing an item changes the contents of both |Lists|.
--- 		A |Dictionary| is copied in a similar way as a |List|.
--- 		Also see |deepcopy()|.
-function vim.fn.copy(expr) end
-
--- Returns a |String| which is a unique identifier of the
--- 		container type (|List|, |Dict| and |Partial|). It is
--- 		guaranteed that for the mentioned types `id(v1) ==# id(v2)`
--- 		returns true iff `type(v1) == type(v2) && v1 is v2` (note:
--- 		|v:_null_list| and |v:_null_dict| have the same `id()` with
--- 		different types because they are internally represented as
--- 		a NULL pointers). Currently `id()` returns a hexadecimal
--- 		representanion of the pointers to the containers (i.e. like
--- 		`0x994a40`), same as `printf("%p", {expr})`, but it is advised
--- 		against counting on exact format of return value.
+-- 			" Remove sign 40 from all the buffers
+-- 			call sign_unplace('*', {'id' : 40})
 --
--- 		It is not guaranteed that `id(no_longer_existing_container)`
--- 		will not be equal to some other `id()`: new containers may
--- 		reuse identifiers of the garbage-collected ones.
---- @return string
-function vim.fn.id(expr) end
-
--- Call function {func} with the items in |List| {arglist} as
--- 		arguments.
--- 		{func} can either be a |Funcref| or the name of a function.
--- 		a:firstline and a:lastline are set to the cursor line.
--- 		Returns the return value of the called function.
--- 		{dict} is for functions with the "dict" attribute.  It will be
--- 		used to set the local variable "self". |Dictionary-function|
+-- 			" Remove all the placed signs from all the buffers
+-- 			call sign_unplace('*')
 --- @param dict dictionary
-function vim.fn.call(func, arglist, dict) end
+--- @return number
+function vim.fn.sign_unplace(group, dict) end
 
--- Sends a request to {channel} to invoke {method} via
--- 		|RPC| and blocks until a response is received.
--- 		Example: >
--- 			:let result = rpcrequest(rpc_chan, "func", 1, 2, 3)
---- @return sends
-function vim.fn.rpcrequest(channel, method, ...) end
-
--- Sends {event} to {channel} via |RPC| and returns immediately.
--- 		If {channel} is 0, the event is broadcast to all channels.
--- 		Example: >
--- 			:au VimLeave call rpcnotify(0, "leaving")
---- @return sends
-function vim.fn.rpcnotify(channel, event, ...) end
+-- Return a |List| that is null. Only useful for testing.
+--- @return list
+function vim.fn.test_null_list() end
 
 -- Waits until {condition} evaluates to |TRUE|, where {condition}
 -- 		is a |Funcref| or |string| containing an expression.
@@ -234,78 +182,121 @@ function vim.fn.rpcnotify(channel, event, ...) end
 --- @return number
 function vim.fn.wait(timeout, condition, interval) end
 
--- Return the current command-line.  Only works when the command
--- 		line is being edited, thus requires use of |c_CTRL-\_e| or
--- 		|c_CTRL-R_=|.
--- 		Example: >
--- 			:cmap <F7> <C-\>eescape(getcmdline(), ' \')<CR>
--- <		Also see |getcmdtype()|, |getcmdpos()| and |setcmdpos()|.
--- 		Returns an empty string when entering a password or using
--- 		|inputsecret()|.
+-- Returns the single letter name of the register being recorded.
+-- 		Returns an empty string string when not recording.  See |q|.
 --- @return string
-function vim.fn.getcmdline() end
+function vim.fn.reg_recording() end
 
--- Return the position of the cursor in the command line as a
--- 		byte count.  The first column is 1.
--- 		Only works when editing the command line, thus requires use of
--- 		|c_CTRL-\_e| or |c_CTRL-R_=| or an expression mapping.
--- 		Returns 0 otherwise.
--- 		Also see |getcmdtype()|, |setcmdpos()| and |getcmdline()|.
+-- Reset the flag that indicates option {name} was set.  Thus it
+-- 		looks like it still has the default value. Use like this: >
+-- 			set ambiwidth=double
+-- 			call test_option_not_set('ambiwidth')
+-- <		Now the 'ambiwidth' option behaves like it was never changed,
+-- 		even though the value is "double".
+-- 		Only to be used for testing!
+--
+-- 		Can also be used as a |method|: >
+-- 			GetOptionName()->test_option_not_set()
+--- @return none
+function vim.fn.test_option_not_set(name) end
+
+-- Return the window number of window with ID {expr}.
+-- 		Return 0 if the window cannot be found in the current tabpage.
 --- @return number
-function vim.fn.getcmdpos() end
+function vim.fn.win_id2win(expr) end
 
--- Return a |List| with the lines starting from {lnum} to {end}
--- 		(inclusive) in the buffer {expr}.  If {end} is omitted, a
--- 		|List| with only the line {lnum} is returned.
+-- Overrides certain parts of Vim's internal processing to be able
+-- 		to run tests. Only to be used for testing Vim!
+-- 		The override is enabled when {val} is non-zero and removed
+-- 		when {val} is zero.
+-- 		Current supported values for name are:
 --
--- 		For the use of {expr}, see |bufname()| above.
+-- 		name	     effect when {val} is non-zero ~
+-- 		redraw       disable the redrawing() function
+-- 		redraw_flag  ignore the RedrawingDisabled flag
+-- 		char_avail   disable the char_avail() function
+-- 		starting     reset the "starting" variable, see below
+-- 		nfa_fail     makes the NFA regexp engine fail to force a
+-- 			     fallback to the old engine
+-- 		no_query_mouse  do not query the mouse position for "dec"
+-- 				terminals
+-- 		no_wait_return	set the "no_wait_return" flag.  Not restored
+-- 				with "ALL".
+-- 		ALL	     clear all overrides ({val} is not used)
 --
--- 		For {lnum} and {end} "$" can be used for the last line of the
--- 		buffer.  Otherwise a number must be used.
+-- 		"starting" is to be used when a test should behave like
+-- 		startup was done.  Since the tests are run by sourcing a
+-- 		script the "starting" variable is non-zero. This is usually a
+-- 		good thing (tests run faster), but sometimes changes behavior
+-- 		in a way that the test doesn't work properly.
+-- 		When using: >
+-- 			call test_override('starting', 1)
+-- <		The value of "starting" is saved.  It is restored by: >
+-- 			call test_override('starting', 0)
 --
--- 		When {lnum} is smaller than 1 or bigger than the number of
--- 		lines in the buffer, an empty |List| is returned.
---
--- 		When {end} is greater than the number of lines in the buffer,
--- 		it is treated as {end} is set to the number of lines in the
--- 		buffer.  When {end} is before {lnum} an empty |List| is
--- 		returned.
---
--- 		This function works only for loaded buffers.  For unloaded and
--- 		non-existing buffers, an empty |List| is returned.
---
+-- <		Can also be used as a |method|: >
+-- 			GetOverrideVal()-> test_override('starting')
+--- @return none
+function vim.fn.test_override(expr, val) end
+
+-- Return the screen position of window {nr} as a list with two
+-- 		numbers: [row, col].  The first window always has position
+-- 		[1, 1], unless there is a tabline, then it is [2, 1].
+-- 		{nr} can be the window number or the |window-ID|.
+-- 		Return [0, 0] if the window cannot be found in the current
+-- 		tabpage.
+--- @return list
+function vim.fn.win_screenpos(nr) end
+
+-- associated with window {nr}.  {nr} can be the window number or
+-- 		the |window-ID|.
+-- 		When {nr} is zero, the number of the buffer in the current
+-- 		window is returned.
+-- 		When window {nr} doesn't exist, -1 is returned.
 -- 		Example: >
--- 			:let lines = getbufline(bufnr("myfile"), 1, "$")
---- @return list
-function vim.fn.getbufline(expr, lnum, _end) end
+--   :echo "The file in the current window is " . bufname(winbufnr(0))
+-- <
+--- @return number
+function vim.fn.winbufnr(nr) end
 
--- Return a |List| with all the values of {dict}.  The |List| is
--- 		in arbitrary order.
---- @param dict dictionary
---- @return list
-function vim.fn.values(dict) end
+-- The result is a Number, which is |TRUE| if a buffer called
+-- 		{expr} exists and is loaded (shown in a window or hidden).
+-- 		The {expr} argument is used like with |bufexists()|.
+--- @return number
+function vim.fn.bufloaded(expr) end
 
--- the view of the current window.  Use |winrestview()| to
--- 		restore the view.
--- 		This is useful if you have a mapping that jumps around in the
--- 		buffer and you want to go back to the original view.
--- 		This does not save fold information.  Use the 'foldenable'
--- 		option to temporarily switch off folding, so that folds are
--- 		not opened when moving around. This may have side effects.
+-- the current window sizes.  Only works properly when no windows
+-- 		are opened or closed and the current window and tab page is
+-- 		unchanged.
+-- 		Example: >
+-- 			:let cmd = winrestcmd()
+-- 			:call MessWithWindowSizes()
+-- 			:exe cmd
+-- <
+--- @return string
+function vim.fn.winrestcmd() end
+
+-- The result is a dictionary of byte/chars/word statistics for
+-- 		the current buffer.  This is the same info as provided by
+-- 		|g_CTRL-G|
 -- 		The return value includes:
--- 			lnum		cursor line number
--- 			col		cursor column (Note: the first column
--- 					zero, as opposed to what getpos()
--- 					returns)
--- 			coladd		cursor column offset for 'virtualedit'
--- 			curswant	column for vertical movement
--- 			topline		first line in the window
--- 			topfill		filler lines, only in diff mode
--- 			leftcol		first column displayed
--- 			skipcol		columns skipped
--- 		Note that no option values are saved.
+-- 			bytes		Number of bytes in the buffer
+-- 			chars		Number of chars in the buffer
+-- 			words		Number of words in the buffer
+-- 			cursor_bytes    Number of bytes before cursor position
+-- 					(not in Visual mode)
+-- 			cursor_chars    Number of chars before cursor position
+-- 					(not in Visual mode)
+-- 			cursor_words    Number of words before cursor position
+-- 					(not in Visual mode)
+-- 			visual_bytes    Number of bytes visually selected
+-- 					(only in Visual mode)
+-- 			visual_chars    Number of chars visually selected
+-- 					(only in Visual mode)
+-- 			visual_words    Number of chars visually selected
+-- 					(only in Visual mode)
 --- @return dict
-function vim.fn.winsaveview() end
+function vim.fn.wordcount() end
 
 -- Without {flags} or with {flags} empty: Deletes the file by the
 -- 		name {fname}.  This also works when {fname} is a symbolic link.
@@ -324,214 +315,130 @@ function vim.fn.winsaveview() end
 --- @return number
 function vim.fn.delete(fname, flags) end
 
--- Return a |List| with all the keys of {dict}.  The |List| is in
--- 		arbitrary order.
---- @param dict dictionary
---- @return list
-function vim.fn.keys(dict) end
+-- Set attrs in nvim__buf_set_lua_hl callbacks
+--
+--                 TODO(bfredl): This is rather pedestrian. The final interface
+--                 should probably be derived from a reformed bufhl/virttext
+--                 interface with full support for multi-line ranges etc
+function vim.fn.nvim__put_attr(id, c0, c1) end
 
--- The result is a Number.  If the line {lnum} is in a closed
--- 		fold, the result is the number of the first line in that fold.
--- 		If the line {lnum} is not in a closed fold, -1 is returned.
---- @return number
-function vim.fn.foldclosed(lnum) end
+-- Calls many API methods atomically.
+--
+--                 This has two main usages:
+--                 1. To perform several requests from an async context
+--                    atomically, i.e. without interleaving redraws, RPC requests
+--                    from other clients, or user interactions (however API
+--                    methods may trigger autocommands or event processing which
+--                    have such side-effects, e.g. |:sleep| may wake timers).
+--                 2. To minimize RPC overhead (roundtrips) of a sequence of many
+--                    requests.
+--
+--                 Parameters: ~
+--                     {calls}  an array of calls, where each call is described
+--                              by an array with two elements: the request name,
+--                              and an array of arguments.
+--
+--                 Return: ~
+--                     Array of two elements. The first is an array of return
+--                     values. The second is NIL if all calls succeeded. If a
+--                     call resulted in an error, it is a three-element array
+--                     with the zero-based index of the call which resulted in an
+--                     error, the error type and the error message. If an error
+--                     occurred, the values from all preceding calls will still
+--                     be returned.
+function vim.fn.nvim_call_atomic(calls) end
 
--- defined, zero otherwise.
+-- Return a string which contains characters indicating the
+-- 		current state.  Mostly useful in callbacks that want to do
+-- 		work that may not always be safe.  Roughly this works like:
+-- 		- callback uses state() to check if work is safe to do.
+-- 		  Yes: then do it right away.
+-- 		  No:  add to work queue and add a |SafeState| and/or
+-- 		       |SafeStateAgain| autocommand (|SafeState| triggers at
+-- 		       toplevel, |SafeStateAgain| triggers after handling
+-- 		       messages and callbacks).
+-- 		- When SafeState or SafeStateAgain is triggered and executes
+-- 		  your autocommand, check with `state()` if the work can be
+-- 		  done now, and if yes remove it from the queue and execute.
+-- 		  Remove the autocommand if the queue is now empty.
+-- 		Also see |mode()|.
 --
--- 		For checking for a supported feature use |has()|.
--- 		For checking if a file exists use |filereadable()|.
---
--- 		The {expr} argument is a string, which contains one of these:
--- 			&option-name	Vim option (only checks if it exists,
--- 					not if it really works)
--- 			+option-name	Vim option that works.
--- 			$ENVNAME	environment variable (could also be
--- 					done by comparing with an empty
--- 					string)
--- 			*funcname	built-in function (see |functions|)
--- 					or user defined function (see
--- 					|user-function|). Also works for a
--- 					variable that is a Funcref.
--- 			varname		internal variable (see
--- 					|internal-variables|).  Also works
--- 					for |curly-braces-names|, |Dictionary|
--- 					entries, |List| items, etc.  Beware
--- 					that evaluating an index may cause an
--- 					error message for an invalid
--- 					expression.  E.g.: >
--- 					   :let l = [1, 2, 3]
--- 					   :echo exists("l[5]")
--- <					   0 >
--- 					   :echo exists("l[xx]")
--- <					   E121: Undefined variable: xx
--- 					   0
--- 			:cmdname	Ex command: built-in command, user
--- 					command or command modifier |:command|.
--- 					Returns:
--- 					1  for match with start of a command
--- 					2  full match with a command
--- 					3  matches several user commands
--- 					To check for a supported command
--- 					always check the return value to be 2.
--- 			:2match		The |:2match| command.
--- 			:3match		The |:3match| command.
--- 			#event		autocommand defined for this event
--- 			#event#pattern	autocommand defined for this event and
--- 					pattern (the pattern is taken
--- 					literally and compared to the
--- 					autocommand patterns character by
--- 					character)
--- 			#group		autocommand group exists
--- 			#group#event	autocommand defined for this group and
--- 					event.
--- 			#group#event#pattern
--- 					autocommand defined for this group,
--- 					event and pattern.
--- 			##event		autocommand for this event is
--- 					supported.
---
--- 		Examples: >
--- 			exists("&mouse")
--- 			exists("$HOSTNAME")
--- 			exists("*strftime")
--- 			exists("*s:MyFunc")
--- 			exists("bufcount")
--- 			exists(":Make")
--- 			exists("#CursorHold")
--- 			exists("#BufReadPre#*.gz")
--- 			exists("#filetypeindent")
--- 			exists("#filetypeindent#FileType")
--- 			exists("#filetypeindent#FileType#*")
--- 			exists("##ColorScheme")
--- <		There must be no space between the symbol (&/$/*/#) and the
--- 		name.
--- 		There must be no extra characters after the name, although in
--- 		a few cases this is ignored.  That may become more strict in
--- 		the future, thus don't count on it!
--- 		Working example: >
--- 			exists(":make")
--- <		NOT working example: >
--- 			exists(":make install")
---
--- <		Note that the argument must be a string, not the name of the
--- 		variable itself.  For example: >
--- 			exists(bufcount)
--- <		This doesn't check for existence of the "bufcount" variable,
--- 		but gets the value of "bufcount", and checks if that exists.
---- @return number
-function vim.fn.exists(expr) end
-
--- Create a timer and return the timer ID.
---
--- 		{time} is the waiting time in milliseconds. This is the
--- 		minimum time before invoking the callback.  When the system is
--- 		busy or Vim is not waiting for input the time will be longer.
---
--- 		{callback} is the function to call.  It can be the name of a
--- 		function or a |Funcref|.  It is called with one argument, which
--- 		is the timer ID.  The callback is only invoked when Vim is
--- 		waiting for input.
---
--- 		{options} is a dictionary.  Supported entries:
--- 		   "repeat"	Number of times to repeat the callback.
--- 				-1 means forever.  Default is 1.
--- 				If the timer causes an error three times in a
--- 				row the repeat is cancelled.
---
--- 		Example: >
--- 			func MyHandler(timer)
--- 			  echo 'Handler called'
--- 			endfunc
--- 			let timer = timer_start(500, 'MyHandler',
--- 				\ {'repeat': 3})
--- <		This invokes MyHandler() three times at 500 msec intervals.
---- @return number
-function vim.fn.timer_start(time, callback, options) end
-
--- Stop a timer.  The timer callback will no longer be invoked.
--- 		{timer} is an ID returned by timer_start(), thus it must be a
--- 		Number.  If {timer} does not exist there is no error.
---- @return none
-function vim.fn.timer_stop(timer) end
-
--- position given with {expr}.  The accepted positions are:
--- 		    .	    the cursor position
--- 		    $	    the end of the cursor line (the result is the
--- 			    number of bytes in the cursor line plus one)
--- 		    'x	    position of mark x (if the mark is not set, 0 is
--- 			    returned)
--- 		    v       In Visual mode: the start of the Visual area (the
--- 			    cursor is the end).  When not in Visual mode
--- 			    returns the cursor position.  Differs from |'<| in
--- 			    that it's updated right away.
--- 		Additionally {expr} can be [lnum, col]: a |List| with the line
--- 		and column number. Most useful when the column is "$", to get
--- 		the last column of a specific line.  When "lnum" or "col" is
--- 		out of range then col() returns zero.
--- 		To get the line number use |line()|.  To get both use
--- 		|getpos()|.
--- 		For the screen column position use |virtcol()|.
--- 		Note that only marks in the current file can be used.
--- 		Examples: >
--- 			col(".")		column of cursor
--- 			col("$")		length of cursor line plus one
--- 			col("'t")		column of mark t
--- 			col("'" . markname)	column of mark markname
--- <		The first column is 1.  0 is returned for an error.
--- 		For an uppercase mark the column may actually be in another
--- 		buffer.
--- 		For the cursor position, when 'virtualedit' is active, the
--- 		column is one higher if the cursor is after the end of the
--- 		line.  This can be used to obtain the column in Insert mode: >
--- 			:imap <F2> <C-O>:let save_ve = &ve<CR>
--- 				\<C-O>:set ve=all<CR>
--- 				\<C-O>:echo col(".") . "\n" <Bar>
--- 				\let &ve = save_ve<CR>
+-- 		When {what} is given only characters in this string will be
+-- 		added.  E.g, this checks if the screen has scrolled: >
+-- 			if state('s') == ''
+-- 			   " screen has not scrolled
 -- <
---- @return number
-function vim.fn.col(expr) end
-
--- Same as |match()|, but return the matched string.  Example: >
--- 			:echo matchstr("testing", "ing")
--- <		results in "ing".
--- 		When there is no match "" is returned.
--- 		The {start}, if given, has the same meaning as for |match()|. >
--- 			:echo matchstr("testing", "ing", 2)
--- <		results in "ing". >
--- 			:echo matchstr("testing", "ing", 5)
--- <		result is "".
--- 		When {expr} is a |List| then the matching item is returned.
--- 		The type isn't changed, it's not necessarily a String.
+-- 		These characters indicate the state, generally indicating that
+-- 		something is busy:
+-- 		    m	halfway a mapping, :normal command, feedkeys() or
+-- 			stuffed command
+-- 		    o	operator pending or waiting for a command argument,
+-- 		        e.g. after |f|
+-- 		    a	Insert mode autocomplete active
+-- 		    x	executing an autocommand
+-- 		    w	blocked on waiting, e.g. ch_evalexpr(), ch_read() and
+-- 			ch_readraw() when reading json.
+-- 		    S	not triggering SafeState or SafeStateAgain
+-- 		    c	callback invoked, including timer (repeats for
+-- 			recursiveness up to "ccc")
+-- 		    s	screen has scrolled for messages
 --- @return string
-function vim.fn.matchstr(expr, pat, start, count) end
+function vim.fn.state(what) end
 
--- Get item {idx} from |List| {list}.  When this item is not
--- 		available return {default}.  Return zero when {default} is
--- 		Get item with key {key} from |Dictionary| {dict}.  When this
--- 		item is not available return {default}.  Return zero when
--- 		{default} is omitted.  Useful example: >
--- 			let val = get(g:, 'var_name', 'default')
--- <		This gets the value of g:var_name if it exists, and uses
--- 		Get item {what} from Funcref {func}.  Possible values for
--- 		{what} are:
--- 			"name"	The function name
--- 			"func"	The function
--- 			"dict"	The dictionary
--- 			"args"	The list with arguments
-function vim.fn.get(func, what) end
+-- Execute Lua code. Parameters (if any) are available as `...`
+--                 inside the chunk. The chunk can return a value.
+--
+--                 Only statements are executed. To evaluate an expression,
+--                 prefix it with `return` : return my_function(...)
+--
+--                 Parameters: ~
+--                     {code}  Lua code to execute
+--                     {args}  Arguments to the code
+--
+--                 Return: ~
+--                     Return value of Lua code if present or NIL.
+--- @param args any[]
+function vim.fn.nvim_exec_lua(code, args) end
 
--- Return the largest integral value with magnitude less than or
--- 		equal to {expr} as a |Float| (truncate towards zero).
--- 		{expr} must evaluate to a |Float| or a |Number|.
--- 		Examples: >
--- 			echo trunc(1.456)
--- <			1.0  >
--- 			echo trunc(-5.456)
--- <			-5.0  >
--- 			echo trunc(4.0)
--- <			4.0
---- @return float
-function vim.fn.trunc(expr) end
+-- Returns a 2-tuple (Array), where item 0 is the current channel
+--                 id and item 1 is the |api-metadata| map (Dictionary).
+--
+--                 Return: ~
+--                     2-tuple [{channel-id}, {api-metadata}]
+--
+--                 Attributes: ~
+--                     {fast}
+function vim.fn.nvim_get_api_info() end
+
+-- Positions the cursor at the column (byte count) {col} in the
+-- 		line {lnum}.  The first column is one.
+--
+-- 		When there is one argument {list} this is used as a |List|
+-- 		with two, three or four item:
+-- 			[{lnum}, {col}]
+-- 			[{lnum}, {col}, {off}]
+-- 			[{lnum}, {col}, {off}, {curswant}]
+-- 		This is like the return value of |getpos()| or |getcurpos()|,
+-- 		but without the first item.
+--
+-- 		Does not change the jumplist.
+-- 		If {lnum} is greater than the number of lines in the buffer,
+-- 		the cursor will be positioned at the last line in the buffer.
+-- 		If {lnum} is zero, the cursor will stay in the current line.
+-- 		If {col} is greater than the number of bytes in the line,
+-- 		the cursor will be positioned at the last character in the
+-- 		line.
+-- 		If {col} is zero, the cursor will stay in the current column.
+-- 		If {curswant} is given it is used to set the preferred column
+-- 		for vertical movement.  Otherwise {col} is used.
+--
+-- 		When 'virtualedit' is used {off} specifies the offset in
+-- 		screen columns from the start of the character.  E.g., a
+-- 		position within a <Tab> or after the last character.
+-- 		Returns 0 when the position could be set, -1 otherwise.
+--- @param list any[]
+--- @return number
+function vim.fn.cursor(list) end
 
 -- {expr1} must be a |List| or a |Dictionary|.
 -- 		Replace each item in {expr1} with the result of evaluating
@@ -578,54 +485,197 @@ function vim.fn.trunc(expr) end
 --- @return list/dict
 function vim.fn.map(expr1, expr2) end
 
--- Change the current working directory to {dir}.  The scope of
--- 		the directory change depends on the directory of the current
--- 		window:
--- 			- If the current window has a window-local directory
--- 			  (|:lcd|), then changes the window local directory.
--- 			- Otherwise, if the current tabpage has a local
--- 			  directory (|:tcd|) then changes the tabpage local
--- 			  directory.
--- 			- Otherwise, changes the global directory.
--- 		If successful, returns the previous working directory.  Pass
--- 		this to another chdir() to restore the directory.
--- 		On failure, returns an empty string.
---
--- 		Example: >
--- 			let save_dir = chdir(newdir)
--- 			if save_dir != ""
--- 			   " ... do some work
--- 			   call chdir(save_dir)
+-- in the window.  This is counting screen lines from the top of
+-- 		the window.  The first line is one.
+-- 		If the cursor was moved the view on the file will be updated
+-- 		first, this may cause a scroll.
+--- @return number
+function vim.fn.winline() end
+
+-- Shorten directory names in the path {expr} and return the
+-- 		result.  The tail, the file name, is kept as-is.  The other
+-- 		components in the path are reduced to single letters.  Leading
+-- 		'~' and '.' characters are kept.  Example: >
+-- 			:echo pathshorten('~/.config/nvim/autoload/file1.vim')
+-- <			~/.c/n/a/file1.vim ~
+-- 		It doesn't matter if the path exists or not.
+--- @return string
+function vim.fn.pathshorten(expr) end
+
+-- Returns the effective value of 'shiftwidth'. This is the
+-- 		'shiftwidth' value unless it is zero, in which case it is the
+-- 		'tabstop' value.  To be backwards compatible in indent
+-- 		plugins, use this: >
+-- 			if exists('*shiftwidth')
+-- 			  func s:sw()
+-- 			    return shiftwidth()
+-- 			  endfunc
+-- 			else
+-- 			  func s:sw()
+-- 			    return &sw
+-- 			  endfunc
 -- 			endif
+-- <		And then use s:sw() instead of &sw.
+--- @return number
+function vim.fn.shiftwidth() end
+
+-- Modify the tag stack of the window {nr} using {dict}.
+-- 		{nr} can be the window number or the |window-ID|.
 --
--- <		Can also be used as a |method|: >
--- 			GetDir()->chdir()
---- @return string
-function vim.fn.chdir(dir) end
-
--- Returns the full path of {expr} if it is an executable and
--- 		given as a (partial or full) path or is found in $PATH.
--- 		Returns empty string otherwise.
--- 		If {expr} starts with "./" the |current-directory| is used.
---- @return string
-function vim.fn.exepath(expr) end
-
--- This is a unique number, until Vim exits.
+-- 		For a list of supported items in {dict}, refer to
+-- 		|gettagstack()|. "curidx" takes effect before changing the tag
+-- 		stack.
+-- 							*E962*
+-- 		How the tag stack is modified depends on the {action}
+-- 		argument:
+-- 		- If {action} is not present or is set to 'r', then the tag
+-- 		  stack is replaced.
+-- 		- If {action} is set to 'a', then new entries from {dict} are
+-- 		  pushed (added) onto the tag stack.
+-- 		- If {action} is set to 't', then all the entries from the
+-- 		  current entry in the tag stack or "curidx" in {dict} are
+-- 		  removed and then new entries are pushed to the stack.
+--
+-- 		The current index is set to one after the length of the tag
+-- 		stack after the modification.
+--
+-- 		Returns zero for success, -1 for failure.
+--
+-- 		Examples:
+-- 		    Set current index of the tag stack to 4: >
+-- 			call settagstack(1005, {'curidx' : 4})
+--
+-- <		    Empty the tag stack of window 3: >
+-- 			call settagstack(3, {'items' : []})
+--
+-- <		    Push a new item onto the tag stack: >
+-- 			let pos = [bufnr('myfile.txt'), 10, 1, 0]
+-- 			let newtag = [{'tagname' : 'mytag', 'from' : pos}]
+-- 			call settagstack(2, {'items' : newtag}, 'a')
+--
+-- <		    Save and restore the tag stack: >
+-- 			let stack = gettagstack(1003)
+-- 			" do something else
+-- 			call settagstack(1003, stack)
+-- 			unlet stack
+-- <
+--- @param dict dictionary
 --- @return number
-function vim.fn.getpid() end
+function vim.fn.settagstack(nr, dict, action) end
 
--- When {text} is a |List|: Append each item of the |List| as a
--- 		text line below line {lnum} in the current buffer.
--- 		Otherwise append {text} as one text line below line {lnum} in
--- 		the current buffer.
--- 		{lnum} can be zero to insert a line before the first one.
--- 		Returns 1 for failure ({lnum} out of range or out of memory),
--- 		0 for success.  Example: >
--- 			:let failed = append(line('$'), "# THE END")
--- 			:let failed = append(0, ["Chapter 1", "the beginning"])
+-- The result is a String, which is the contents of register
+-- 		{regname}.  Example: >
+-- 			:let cliptext = getreg('*')
+-- <		When {regname} was not set the result is an empty string.
+--
+-- 		getreg('=') returns the last evaluated value of the expression
+-- 		register.  (For use in maps.)
+-- 		getreg('=', 1) returns the expression itself, so that it can
+-- 		be restored with |setreg()|.  For other registers the extra
+-- 		argument is ignored, thus you can always give it.
+--
+-- 		If {list} is present and |TRUE|, the result type is changed
+-- 		to |List|. Each list item is one text line. Use it if you care
+-- 		about zero bytes possibly present inside register: without
+-- 		third argument both NLs and zero bytes are represented as NLs
+-- 		(see |NL-used-for-Nul|).
+-- 		When the register was not set an empty list is returned.
+--
+-- 		If {regname} is not specified, |v:register| is used.
 --- @param list any[]
+--- @return string
+function vim.fn.getreg(regname, _1, list) end
+
+-- window.  The top window has number 1.
+--
+-- 		The optional argument {arg} supports the following values:
+-- 			$	the number of the last window (the window
+-- 				count).
+-- 			#	the number of the last accessed window (where
+-- 				|CTRL-W_p| goes to).  If there is no previous
+-- 				window or it is in another tab page 0 is
+-- 				returned.
+-- 			{N}j	the number of the Nth window below the
+-- 				current window (where |CTRL-W_j| goes to).
+-- 			{N}k	the number of the Nth window above the current
+-- 				window (where |CTRL-W_k| goes to).
+-- 			{N}h	the number of the Nth window left of the
+-- 				current window (where |CTRL-W_h| goes to).
+-- 			{N}l	the number of the Nth window right of the
+-- 				current window (where |CTRL-W_l| goes to).
+-- 		The number can be used with |CTRL-W_w| and ":wincmd w"
+-- 		|:wincmd|.
+-- 		Also see |tabpagewinnr()| and |win_getid()|.
+-- 		Examples: >
+-- 			let window_count = winnr('$')
+-- 			let prev_window = winnr('#')
+-- 			let wnum = winnr('3k')
+-- <
 --- @return number
-function vim.fn.append(lnum, list) end
+function vim.fn.winnr(expr) end
+
+-- Self-identifies the client.
+--
+--                 The client/plugin/application should call this after
+--                 connecting, to provide hints about its identity and purpose,
+--                 for debugging and orchestration.
+--
+--                 Can be called more than once; the caller should merge old info
+--                 if appropriate. Example: library first identifies the channel,
+--                 then a plugin using that library later identifies itself.
+--
+--                 Note:
+--                     "Something is better than nothing". You don't need to
+--                     include all the fields.
+--
+--                 Parameters: ~
+--                     {name}        Short name for the connected client
+--                     {version}     Dictionary describing the version, with
+--                                   these (optional) keys:
+--                                   • "major" major version (defaults to 0 if
+--                                     not set, for no release yet)
+--                                   • "minor" minor version
+--                                   • "patch" patch number
+--                                   • "prerelease" string describing a
+--                                     prerelease, like "dev" or "beta1"
+--                                   • "commit" hash or similar identifier of
+--                                     commit
+--                     {type}        Must be one of the following values. Client
+--                                   libraries should default to "remote" unless
+--                                   overridden by the user.
+--                                   • "remote" remote client connected to Nvim.
+--                                   • "ui" gui frontend
+--                                   • "embedder" application using Nvim as a
+--                                     component (for example, IDE/editor
+--                                     implementing a vim mode).
+--                                   • "host" plugin host, typically started by
+--                                     nvim
+--                                   • "plugin" single plugin, started by nvim
+--                     {methods}     Builtin methods in the client. For a host,
+--                                   this does not include plugin methods which
+--                                   will be discovered later. The key should be
+--                                   the method name, the values are dicts with
+--                                   these (optional) keys (more keys may be
+--                                   added in future versions of Nvim, thus
+--                                   unknown keys are ignored. Clients must only
+--                                   use keys defined in this or later versions
+--                                   of Nvim):
+--                                   • "async" if true, send as a notification.
+--                                     If false or unspecified, use a blocking
+--                                     request
+--                                   • "nargs" Number of arguments. Could be a
+--                                     single integer or an array of two
+--                                     integers, minimum and maximum inclusive.
+--                     {attributes}  Arbitrary string:string map of informal
+--                                   client properties. Suggested keys:
+--                                   • "website": Client homepage URL (e.g.
+--                                     GitHub repository)
+--                                   • "license": License description ("Apache
+--                                     2", "GPLv3", "MIT", …)
+--                                   • "logo": URI or path to image, preferably
+--                                     small logo or icon. .png or .svg format is
+--                                     preferred.
+function vim.fn.nvim_set_client_info(name, version, type, methods, attributes) end
 
 -- Return the number of times an item with value {expr} appears
 -- 		in |String|, |List| or |Dictionary| {comp}.
@@ -642,44 +692,24 @@ function vim.fn.append(lnum, list) end
 --- @return number
 function vim.fn.count(list, expr, ic, start) end
 
--- {textlist} must be a |List| of strings.  This |List| is
--- 		displayed, one string per line.  The user will be prompted to
--- 		enter a number, which is returned.
--- 		The user can also select an item by clicking on it with the
--- 		mouse.  For the first string 0 is returned.  When clicking
--- 		above the first item a negative number is returned.  When
--- 		clicking on the prompt one more than the length of {textlist}
--- 		is returned.
--- 		Make sure {textlist} has less than 'lines' entries, otherwise
--- 		it won't work.  It's a good idea to put the entry number at
--- 		the start of the string.  And put a prompt in the first item.
--- 		Example: >
--- 			let color = inputlist(['Select color:', '1. red',
--- 				\ '2. green', '3. blue'])
---- @return number
-function vim.fn.inputlist(textlist) end
-
--- Waits for jobs and their |on_exit| handlers to complete.
---
--- 		{jobs} is a List of |job-id|s to wait for.
--- 		{timeout} is the maximum waiting time in milliseconds, -1
--- 		means forever.
---
--- 		Timeout of 0 can be used to check the status of a job: >
--- 			let running = jobwait([{job-id}], 0)[0] == -1
--- <
--- 		During jobwait() callbacks for jobs not in the {jobs} list may
--- 		be invoked. The screen will not redraw unless |:redraw| is
--- 		invoked by a callback.
---
--- 		Returns a list of len({jobs}) integers, where each integer is
--- 		the status of the corresponding job:
--- 			Exit-code, if the job exited
--- 			-1 if the timeout was exceeded
--- 			-2 if the job was interrupted (by |CTRL-C|)
--- 			-3 if the job-id is invalid
---- @return number
-function vim.fn.jobwait(ids, timeout) end
+-- Same as |matchstr()|, but return the matched string, the start
+-- 		position and the end position of the match.  Example: >
+-- 			:echo matchstrpos("testing", "ing")
+-- <		results in ["ing", 4, 7].
+-- 		When there is no match ["", -1, -1] is returned.
+-- 		The {start}, if given, has the same meaning as for |match()|. >
+-- 			:echo matchstrpos("testing", "ing", 2)
+-- <		results in ["ing", 4, 7]. >
+-- 			:echo matchstrpos("testing", "ing", 5)
+-- <		result is ["", -1, -1].
+-- 		When {expr} is a |List| then the matching item, the index
+-- 		of first item where {pat} matches, the start position and the
+-- 		end position of the match are returned. >
+-- 			:echo matchstrpos([1, '__x'], '\a')
+-- <		result is ["x", 1, 2, 3].
+-- 		The type isn't changed, it's not necessarily a String.
+--- @return list
+function vim.fn.matchstrpos(expr, pat, start, count) end
 
 -- Return the Number 1 if {expr} is empty, zero otherwise.
 -- 		A |List| or |Dictionary| is empty when it does not have any
@@ -688,216 +718,89 @@ function vim.fn.jobwait(ids, timeout) end
 --- @return number
 function vim.fn.empty(expr) end
 
--- Spawns {cmd} as a job.
--- 		If {cmd} is a List it runs directly (no 'shell').
--- 		If {cmd} is a String it runs in the 'shell', like this: >
--- 		  :call jobstart(split(&shell) + split(&shellcmdflag) + ['{cmd}'])
--- <		(See |shell-unquoting| for details.)
+-- Convert a list of VimL objects to msgpack. Returned value is
+-- 		|readfile()|-style list. Example: >
+-- 			call writefile(msgpackdump([{}]), 'fname.mpack', 'b')
+-- <		This will write the single 0x80 byte to `fname.mpack` file
+-- 		(dictionary with zero items is represented by 0x80 byte in
+-- 		messagepack).
 --
--- 		Example: >
--- 		  :call jobstart('nvim -h', {'on_stdout':{j,d,e->append(line('.'),d)}})
--- <
--- 		Returns |job-id| on success, 0 on invalid arguments (or job
--- 		table is full), -1 if {cmd}[0] or 'shell' is not executable.
--- 		The returned job-id is a valid |channel-id| representing the
--- 		job's stdio streams. Use |chansend()| (or |rpcnotify()| and
--- 		|rpcrequest()| if "rpc" was enabled) to send data to stdin and
--- 		|chanclose()| to close the streams without stopping the job.
---
--- 		See |job-control| and |RPC|.
---
--- 		NOTE: on Windows if {cmd} is a List:
--- 		  - cmd[0] must be an executable (not a "built-in"). If it is
--- 		    in $PATH it can be called by name, without an extension: >
--- 		      :call jobstart(['ping', 'neovim.io'])
--- <		    If it is a full or partial path, extension is required: >
--- 		      :call jobstart(['System32\ping.exe', 'neovim.io'])
--- <		  - {cmd} is collapsed to a string of quoted args as expected
--- 		    by CommandLineToArgvW https://msdn.microsoft.com/bb776391
--- 		    unless cmd[0] is some form of "cmd.exe".
---
--- 							*jobstart-options*
--- 		{opts} is a dictionary with these keys:
--- 		  clear_env:  (boolean) `env` defines the job environment
--- 			      exactly, instead of merging current environment.
--- 		  cwd:	      (string, default=|current-directory|) Working
--- 			      directory of the job.
--- 		  detach:     (boolean) Detach the job process: it will not be
--- 			      killed when Nvim exits. If the process exits
--- 			      before Nvim, `on_exit` will be invoked.
--- 		  env:	      (dict) Map of environment variable name:value
--- 			      pairs extending (or replacing if |clear_env|)
--- 			      the current environment.
--- 		  height:     (number) Height of the `pty` terminal.
--- 		  |on_exit|:    (function) Callback invoked when the job exits.
--- 		  |on_stdout|:  (function) Callback invoked when the job emits
--- 			      stdout data.
--- 		  |on_stderr|:  (function) Callback invoked when the job emits
--- 			      stderr data.
--- 		  pty:	      (boolean) Connect the job to a new pseudo
--- 			      terminal, and its streams to the master file
--- 			      descriptor. Then  `on_stderr` is ignored,
--- 			      `on_stdout` receives all output.
--- 		  rpc:	      (boolean) Use |msgpack-rpc| to communicate with
--- 			      the job over stdio. Then `on_stdout` is ignored,
--- 			      but `on_stderr` can still be used.
--- 		  stderr_buffered: (boolean) Collect data until EOF (stream closed)
--- 			      before invoking `on_stderr`. |channel-buffered|
--- 		  stdout_buffered: (boolean) Collect data until EOF (stream
--- 			      closed) before invoking `on_stdout`. |channel-buffered|
--- 		  TERM:	      (string) Sets the `pty` $TERM environment variable.
--- 		  width:      (number) Width of the `pty` terminal.
---
--- 		{opts} is passed as |self| dictionary to the callback; the
--- 		caller may set other keys to pass application-specific data.
---
--- 		Returns:
--- 		  - |channel-id| on success
--- 		  - 0 on invalid arguments
--- 		  - -1 if {cmd}[0] is not executable.
--- 		See also |job-control|, |channel|, |msgpack-rpc|.
---- @return number
-function vim.fn.jobstart(cmd, opts) end
-
--- Set environment variable {name} to {val}.
--- 		When {val} is |v:null| the environment variable is deleted.
--- 		See also |expr-env|.
---- @return none
-function vim.fn.setenv(name, val) end
-
--- Return a |List| with all the key-value pairs of {dict}.  Each
--- 		|List| item is a list with two items: the key of a {dict}
--- 		entry and the value of this entry.  The |List| is in arbitrary
--- 		order.
---- @param dict dictionary
---- @return list
-function vim.fn.items(dict) end
-
--- Make a copy of {expr}.  For Numbers and Strings this isn't
--- 		different from using {expr} directly.
--- 		When {expr} is a |List| a full copy is created.  This means
--- 		that the original |List| can be changed without changing the
--- 		copy, and vice versa.  When an item is a |List|, a copy for it
--- 		is made, recursively.  Thus changing an item in the copy does
--- 		not change the contents of the original |List|.
--- 		When {noref} is omitted or zero a contained |List| or
--- 		|Dictionary| is only copied once.  All references point to
--- 		this single copy.  With {noref} set to 1 every occurrence of a
--- 		|List| or |Dictionary| results in a new copy.  This also means
--- 		that a cyclic reference causes deepcopy() to fail.
--- 								*E724*
--- 		Nesting is possible up to 100 levels.  When there is an item
--- 		that refers back to a higher level making a deep copy with
--- 		{noref} set to 1 will fail.
--- 		Also see |copy()|.
-function vim.fn.deepcopy(expr, noref) end
-
--- Float, String or a composition of them, then the result can be
--- 		parsed back with |eval()|.
--- 			{expr} type	result ~
--- 			String		'string'
--- 			Number		123
--- 			Float		123.123456 or 1.123456e8 or
--- 					`str2float('inf')`
--- 			Funcref		`function('name')`
--- 			List		[item, item]
--- 			Dictionary	{key: value, key: value}
--- 		Note that in String values the ' character is doubled.
--- 		Also see |strtrans()|.
--- 		Note 2: Output format is mostly compatible with YAML, except
--- 		for infinite and NaN floating-point values representations
--- 		which use |str2float()|.  Strings are also dumped literally,
--- 		only single quote is escaped, which does not allow using YAML
--- 		for parsing back binary strings.  |eval()| should always work for
--- 		strings and floats though and this is the only official
--- 		method, use |msgpackdump()| or |json_encode()| if you need to
--- 		share data with other application.
---- @return string
-function vim.fn.string(expr) end
-
--- The result is a Number representing the type of {expr}.
--- 		Instead of using the number directly, it is better to use the
--- 		v:t_ variable that has the value:
--- 		        Number:     0 (|v:t_number|)
--- 			String:     1 (|v:t_string|)
--- 			Funcref:    2 (|v:t_func|)
--- 			List:       3 (|v:t_list|)
--- 			Dictionary: 4 (|v:t_dict|)
--- 			Float:      5 (|v:t_float|)
--- 			Boolean:    6 (|v:true| and |v:false|)
--- 			Null:       7 (|v:null|)
--- 		For backward compatibility, this method can be used: >
--- 			:if type(myvar) == type(0)
--- 			:if type(myvar) == type("")
--- 			:if type(myvar) == type(function("tr"))
--- 			:if type(myvar) == type([])
--- 			:if type(myvar) == type({})
--- 			:if type(myvar) == type(0.0)
--- 			:if type(myvar) == type(v:true)
--- <		In place of checking for |v:null| type it is better to check
--- 		for |v:null| directly as it is the only value of this type: >
--- 			:if myvar is v:null
--- <               To check if the v:t_ variables exist use this: >
---                         :if exists('v:t_number')
---- @return number
-function vim.fn.type(name) end
-
--- Get character {index} from {str}.  This uses a character
--- 		index, not a byte index.  Composing characters are considered
--- 		separate characters here.
--- 		Also see |strcharpart()| and |strchars()|.
---- @return number
-function vim.fn.strgetchar(str, index) end
-
--- The result is a Number.  If the line {lnum} is in a closed
--- 		fold, the result is the number of the last line in that fold.
--- 		If the line {lnum} is not in a closed fold, -1 is returned.
---- @return number
-function vim.fn.foldclosedend(lnum) end
-
--- Put up a directory requester.  This only works when
--- 		"has("browse")" returns |TRUE| (only in some GUI versions).
--- 		On systems where a directory browser is not supported a file
--- 		browser is used.  In that case: select a file in the directory
--- 		to be used.
--- 		The input fields are:
--- 		    {title}	title for the requester
--- 		    {initdir}	directory to start browsing in
--- 		When the "Cancel" button is hit, something went wrong, or
--- 		browsing is not possible, an empty string is returned.
---- @return string
-function vim.fn.browsedir(title, initdir) end
-
--- The result is a Number, which is |TRUE| if a buffer called
--- 		{expr} exists and is listed (has the 'buflisted' option set).
--- 		The {expr} argument is used like with |bufexists()|.
---- @return number
-function vim.fn.buflisted(expr) end
-
--- Remove second and succeeding copies of repeated adjacent
--- 		{list} items in-place.  Returns {list}.  If you want a list
--- 		to remain unmodified make a copy first: >
--- 			:let newlist = uniq(copy(mylist))
--- <		The default compare function uses the string representation of
--- 		each item.  For the use of {func} and {dict} see |sort()|.
+-- 		Limitations:				*E5004* *E5005*
+-- 		1. |Funcref|s cannot be dumped.
+-- 		2. Containers that reference themselves cannot be dumped.
+-- 		3. Dictionary keys are always dumped as STR strings.
+-- 		4. Other strings are always dumped as BIN strings.
+-- 		5. Points 3. and 4. do not apply to |msgpack-special-dict|s.
 --- @param list any[]
---- @param dict dictionary
 --- @return list
-function vim.fn.uniq(list, func, dict) end
+function vim.fn.msgpackdump(list) end
 
--- Return a String that represents the time value of {time}.
--- 		This is the number of seconds, a dot and the number of
--- 		microseconds.  Example: >
--- 			let start = reltime()
--- 			call MyFunction()
--- 			echo reltimestr(reltime(start))
--- <		Note that overhead for the commands will be added to the time.
--- 		Leading spaces are used to make the string align nicely.  You
--- 		can use split() to remove it. >
--- 			echo split(reltimestr(reltime(start)))[0]
--- <		Also see |profiling|.
+-- Subscribes to event broadcasts.
+--
+--                 Parameters: ~
+--                     {event}  Event type string
+function vim.fn.nvim_subscribe(event) end
+
+-- Unsubscribes to event broadcasts.
+--
+--                 Parameters: ~
+--                     {event}  Event type string
+function vim.fn.nvim_unsubscribe(event) end
+
+-- Pretend using scrollbar {which} to move it to position
+-- 		{value}.  {which} can be:
+-- 			left	Left scrollbar of the current window
+-- 			right	Right scrollbar of the current window
+-- 			hor	Horizontal scrollbar
+--
+-- 		For the vertical scrollbars {value} can be 1 to the
+-- 		line-count of the buffer.  For the horizontal scrollbar the
+-- 		{value} can be between 1 and the maximum line length, assuming
+-- 		'wrap' is not set.
+--
+-- 		When {dragging} is non-zero it's like dragging the scrollbar,
+-- 		otherwise it's like clicking in the scrollbar.
+-- 		Only works when the {which} scrollbar actually exists,
+-- 		obviously only when using the GUI.
+--
+-- 		Can also be used as a |method|: >
+-- 			GetValue()->test_scrollbar('right', 0)
+--- @return none
+function vim.fn.test_scrollbar(which, value, dragging) end
+
+-- Unstabilized interface for defining syntax hl in lua.
+--
+--                 This is not yet safe for general use, lua callbacks will need
+--                 to be restricted, like textlock and probably other stuff.
+--
+--                 The API on_line/nvim__put_attr is quite raw and not intended
+--                 to be the final shape. Ideally this should operate on chunks
+--                 larger than a single line to reduce interpreter overhead, and
+--                 generate annotation objects (bufhl/virttext) on the fly but
+--                 using the same representation.
+function vim.fn.nvim__buf_set_luahl(buffer, opts) end
+
+-- Set the mouse position to be used for the next mouse action.
+-- 		{row} and {col} are one based.
+-- 		For example: >
+-- 			call test_setmouse(4, 20)
+-- 			call feedkeys("\<LeftMouse>", "xt")
+--- @return none
+function vim.fn.test_setmouse(row, col) end
+
+-- Return the name of the undo file that would be used for a file
+-- 		with name {name} when writing.  This uses the 'undodir'
+-- 		option, finding directories that exist.  It does not check if
+-- 		the undo file exists.
+-- 		{name} is always expanded to the full path, since that is what
+-- 		is used internally.
+-- 		If {name} is empty undofile() returns an empty string, since a
+-- 		buffer without a file name will not write an undo file.
+-- 		Useful in combination with |:wundo| and |:rundo|.
+-- 		When compiled without the |+persistent_undo| option this always
+-- 		returns an empty string.
 --- @return string
-function vim.fn.reltimestr(time) end
+function vim.fn.undofile(name) end
 
 -- Return a |List| with spelling suggestions to replace {word}.
 -- 		When {max} is given up to this number of suggestions are
@@ -922,45 +825,221 @@ function vim.fn.reltimestr(time) end
 --- @return list
 function vim.fn.spellsuggest(word, max, capital) end
 
--- Return a list with file and directory names in {directory}.
--- 		You can also use |glob()| if you don't need to do complicated
--- 		things, such as limiting the number of matches.
+-- Like `execute()` but in the context of window {id}.
+-- 		The window will temporarily be made the current window,
+-- 		without triggering autocommands.  When executing {command}
+-- 		autocommands will be triggered, this may have unexpected side
+-- 		effects.  Use |:noautocmd| if needed.
+-- 		Example: >
+-- 			call win_execute(winid, 'set syntax=python')
+-- <		Doing the same with `setwinvar()` would not trigger
+-- 		autocommands and not actually show syntax highlighting.
+-- 							*E994*
+-- 		Not all commands are allowed in popup windows.
+-- 		When window {id} does not exist then no error is given.
 --
--- 		When {expr} is omitted all entries are included.
--- 		When {expr} is given, it is evaluated to check what to do:
--- 			If {expr} results in -1 then no further entries will
--- 			be handled.
---- @return list
-function vim.fn.readdir(dir, expr) end
-
--- Join the items in {list} together into one String.
--- 		When {sep} is specified it is put in between the items.  If
--- 		{sep} is omitted a single space is used.
--- 		Note that {sep} is not added at the end.  You might want to
--- 		add it there too: >
--- 			let lines = join(mylist, "\n") . "\n"
--- <		String items are used as-is.  |Lists| and |Dictionaries| are
--- 		converted into a string like with |string()|.
--- 		The opposite function is |split()|.
---- @param list any[]
+-- 		Can also be used as a |method|, the base is passed as the
+-- 		second argument: >
+-- 			GetCommand()->win_execute(winid)
 --- @return string
-function vim.fn.join(list, sep) end
+function vim.fn.win_execute(id, command, silent) end
 
--- Insert {item} at the start of |List| {list}.
--- 		If {idx} is specified insert {item} before the item with index
--- 		{idx}.  If {idx} is zero it goes before the first item, just
--- 		like omitting {idx}.  A negative {idx} is also possible, see
--- 		|list-index|.  -1 inserts just before the last item.
--- 		Returns the resulting |List|.  Examples: >
--- 			:let mylist = insert([2, 3, 5], 1)
--- 			:call insert(mylist, 4, -1)
--- 			:call insert(mylist, 6, len(mylist))
--- <		The last example can be done simpler with |add()|.
--- 		Note that when {item} is a |List| it is inserted as a single
--- 		item.  Use |extend()| to concatenate |Lists|.
---- @param list any[]
---- @return list
-function vim.fn.insert(list, item, idx) end
+-- Move the window {nr} to a new split of the window {target}.
+-- 		This is similar to moving to {target}, creating a new window
+-- 		using |:split| but having the same contents as window {nr}, and
+-- 		then closing {nr}.
+--
+-- 		Both {nr} and {target} can be window numbers or |window-ID|s.
+--
+-- 		Returns zero for success, non-zero for failure.
+--
+-- 		{options} is a Dictionary with the following optional entries:
+-- 		  "vertical"	When TRUE, the split is created vertically,
+-- 				like with |:vsplit|.
+-- 		  "rightbelow"	When TRUE, the split is made below or to the
+-- 				right (if vertical).  When FALSE, it is done
+-- 				above or to the left (if vertical).  When not
+-- 				present, the values of 'splitbelow' and
+-- 				'splitright' are used.
+--
+-- 		Can also be used as a |method|: >
+-- 			GetWinid()->win_splitmove(target)
+-- <
+--- @return number
+function vim.fn.win_splitmove(nr, target, options) end
+
+-- Set a callback for buffer {buf} to {expr}.  When {expr} is an
+-- 		empty string the callback is removed.  This has only effect if
+-- 		{buf} has 'buftype' set to "prompt".
+--
+-- 		This callback will be invoked when pressing CTRL-C in Insert
+-- 		mode.  Without setting a callback Vim will exit Insert mode,
+-- 		as in any buffer.
+--- @return none
+function vim.fn.prompt_setinterrupt(buf, text) end
+
+-- Deactivates buffer-update events on the channel.
+--
+--                 Parameters: ~
+--                     {buffer}  Buffer handle, or 0 for current buffer
+--
+--                 Return: ~
+--                     False if detach failed (because the buffer isn't loaded);
+--                     otherwise True.
+--
+--                 See also: ~
+--                     |nvim_buf_attach()|
+--                     |api-lua-detach| for detaching Lua callbacks
+function vim.fn.nvim_buf_detach(buffer) end
+
+-- Evaluate Python expression {expr} and return its result
+-- 		converted to Vim data structures.
+-- 		Numbers and strings are returned as they are (strings are
+-- 		copied though).
+-- 		Lists are represented as Vim |List| type.
+-- 		Dictionaries are represented as Vim |Dictionary| type,
+-- 		non-string keys result in error.
+function vim.fn.pyeval(expr) end
+
+-- Evaluate Python expression {expr} and return its result
+-- 		converted to Vim data structures.
+-- 		Numbers and strings are returned as they are (strings are
+-- 		copied though, Unicode strings are additionally converted to
+-- 		UTF-8).
+-- 		Lists are represented as Vim |List| type.
+-- 		Dictionaries are represented as Vim |Dictionary| type with
+-- 		keys converted to strings.
+function vim.fn.py3eval(expr) end
+
+-- Evaluate Python expression {expr} and return its result
+-- 		converted to Vim data structures.
+-- 		Uses Python 2 or 3, see |python_x| and 'pyxversion'.
+-- 		See also: |pyeval()|, |py3eval()|
+function vim.fn.pyxeval(expr) end
+
+-- Round off {expr} to the nearest integral value and return it
+-- 		as a |Float|.  If {expr} lies halfway between two integral
+-- 		values, then use the larger one (away from zero).
+-- 		{expr} must evaluate to a |Float| or a |Number|.
+-- 		Examples: >
+-- 			echo round(0.456)
+-- <			0.0  >
+-- 			echo round(4.5)
+-- <			5.0 >
+-- 			echo round(-4.5)
+-- <			-5.0
+--- @return float
+function vim.fn.round(expr) end
+
+-- Get the virtual text (annotation) for a buffer line.
+--
+--                 The virtual text is returned as list of lists, whereas the
+--                 inner lists have either one or two elements. The first element
+--                 is the actual text, the optional second element is the
+--                 highlight group.
+--
+--                 The format is exactly the same as given to
+--                 nvim_buf_set_virtual_text().
+--
+--                 If there is no virtual text associated with the given line, an
+--                 empty list is returned.
+--
+--                 Parameters: ~
+--                     {buffer}  Buffer handle, or 0 for current buffer
+--                     {line}    Line to get the virtual text from (zero-indexed)
+--
+--                 Return: ~
+--                     List of virtual text chunks
+function vim.fn.nvim_buf_get_virtual_text(buffer, lnum) end
+
+-- Return a Float that represents the time value of {time}.
+-- 		Unit of time is seconds.
+-- 		Example:
+-- 			let start = reltime()
+-- 			call MyFunction()
+-- 			let seconds = reltimefloat(reltime(start))
+-- 		See the note of reltimestr() about overhead.
+--  		Also see |profiling|.
+--- @return float
+function vim.fn.reltimefloat(time) end
+
+-- Send the {string} to {server}.  The string is sent as an
+-- 		expression and the result is returned after evaluation.
+-- 		The result must be a String or a |List|.  A |List| is turned
+-- 		into a String by joining the items with a line break in
+-- 		between (not at the end), like with join(expr, "\n").
+-- 		If {idvar} is present and not empty, it is taken as the name
+-- 		of a variable and a {serverid} for later use with
+-- 		|remote_read()| is stored there.
+-- 		If {timeout} is given the read times out after this many
+-- 		seconds.  Otherwise a timeout of 600 seconds is used.
+-- 		See also |clientserver| |RemoteReply|.
+-- 		This function is not available in the |sandbox|.
+-- 		Note: Any errors will cause a local error message to be issued
+-- 		and the result will be the empty string.
+--
+-- 		Variables will be evaluated in the global namespace,
+-- 		independent of a function currently being active.  Except
+-- 		when in debug mode, then local function variables and
+-- 		arguments can be evaluated.
+--
+-- 		Examples: >
+-- 			:echo remote_expr("gvim", "2+2")
+-- 			:echo remote_expr("gvim1", "b:current_syntax")
+-- <
+--- @return string
+function vim.fn.remote_expr(server, string, idvar, timeout) end
+
+-- Set prompt callback for buffer {buf} to {expr}.  When {expr}
+-- 		is an empty string the callback is removed.  This has only
+-- 		effect if {buf} has 'buftype' set to "prompt".
+--
+-- 		The callback is invoked when pressing Enter.  The current
+-- 		buffer will always be the prompt buffer.  A new line for a
+-- 		prompt is added before invoking the callback, thus the prompt
+-- 		for which the callback was invoked will be in the last but one
+-- 		line.
+-- 		If the callback wants to add text to the buffer, it must
+-- 		insert it above the last line, since that is where the current
+-- 		prompt is.  This can also be done asynchronously.
+-- 		The callback is invoked with one argument, which is the text
+-- 		that was entered at the prompt.  This can be an empty string
+-- 		if the user only typed Enter.
+-- 		Example: >
+-- 		   call prompt_setcallback(bufnr(''), function('s:TextEntered'))
+-- 		   func s:TextEntered(text)
+-- 		     if a:text == 'exit' || a:text == 'quit'
+-- 		       stopinsert
+-- 		       close
+-- 		     else
+-- 		       call append(line('$') - 1, 'Entered: "' . a:text . '"')
+-- 		       " Reset 'modified' to allow the buffer to be closed.
+-- 		       set nomodified
+-- 		     endif
+-- 		   endfunc
+--- @return none
+function vim.fn.prompt_setcallback(buf, expr) end
+
+-- Set prompt for buffer {buf} to {text}.  You most likely want
+-- 		{text} to end in a space.
+-- 		The result is only visible if {buf} has 'buftype' set to
+-- 		"prompt".  Example: >
+-- 			call prompt_setprompt(bufnr(''), 'command: ')
+--- @return none
+function vim.fn.prompt_setprompt(buf, text) end
+
+-- The result is a Number, which is the number of the first
+-- 		window associated with buffer {expr}.  For the use of {expr},
+-- 		see |bufname()| above.  If buffer {expr} doesn't exist or
+-- 		there is no such window, -1 is returned.  Example: >
+--
+-- 	echo "A window containing buffer 1 is " . (bufwinnr(1))
+--
+-- <		The number can be used with |CTRL-W_w| and ":wincmd w"
+-- 		|:wincmd|.
+-- 		Only deals with the current tab page.
+--- @return number
+function vim.fn.bufwinnr(expr) end
 
 -- Returns Dictionary of |api-metadata|.
 --
@@ -996,56 +1075,6 @@ function vim.fn.argidx() end
 -- 		{winnr} can be the window number or the |window-ID|.
 --- @return number
 function vim.fn.arglistid(winnr, tabnr) end
-
--- Place the sign defined as {name} at line {lnum} in file {expr}
--- 		and assign {id} and {group} to sign.  This is similar to the
--- 		|:sign-place| command.
---
--- 		If the sign identifier {id} is zero, then a new identifier is
--- 		allocated.  Otherwise the specified number is used. {group} is
--- 		the sign group name. To use the global sign group, use an
--- 		empty string.  {group} functions as a namespace for {id}, thus
--- 		two groups can use the same IDs. Refer to |sign-identifier|
--- 		for more information.
---
--- 		{name} refers to a defined sign.
--- 		{expr} refers to a buffer name or number. For the accepted
--- 		values, see |bufname()|.
---
--- 		The optional {dict} argument supports the following entries:
--- 			lnum		line number in the buffer {expr} where
--- 					the sign is to be placed. For the
--- 					accepted values, see |line()|.
--- 			priority	priority of the sign. See
--- 					|sign-priority| for more information.
---
--- 		If the optional {dict} is not specified, then it modifies the
--- 		placed sign {id} in group {group} to use the defined sign
--- 		{name}.
---
--- 		Returns the sign identifier on success and -1 on failure.
---
--- 		Examples: >
--- 			" Place a sign named sign1 with id 5 at line 20 in
--- 			" buffer json.c
--- 			call sign_place(5, '', 'sign1', 'json.c',
--- 							\ {'lnum' : 20})
---
--- 			" Updates sign 5 in buffer json.c to use sign2
--- 			call sign_place(5, '', 'sign2', 'json.c')
---
--- 			" Place a sign named sign3 at line 30 in
--- 			" buffer json.c with a new identifier
--- 			let id = sign_place(0, '', 'sign3', 'json.c',
--- 							\ {'lnum' : 30})
---
--- 			" Place a sign named sign4 with id 10 in group 'g3'
--- 			" at line 40 in buffer json.c with priority 90
--- 			call sign_place(10, 'g3', 'sign4', 'json.c',
--- 					\ {'lnum' : 40, 'priority' : 90})
---- @param dict dictionary
---- @return number
-function vim.fn.sign_place(id, group, name, expr, dict) end
 
 -- Run {cmd} and add an error message to |v:errors| if it does
 -- 		NOT produce a beep or visual bell.
@@ -1099,192 +1128,106 @@ function vim.fn.assert_exception(error, msg) end
 --- @return number
 function vim.fn.assert_fails(cmd, error) end
 
--- When {actual} is not false an error message is added to
--- 		|v:errors|, like with |assert_equal()|.
--- 		Also see |assert-return|.
--- 		A value is false when it is zero or |v:false|. When "{actual}"
--- 		is not a number or |v:false| the assert fails.
--- 		When {msg} is omitted an error in the form
--- 		"Expected False but got {actual}" is produced.
+-- The result is a Number.  If the line {lnum} is in a closed
+-- 		fold, the result is the number of the first line in that fold.
+-- 		If the line {lnum} is not in a closed fold, -1 is returned.
 --- @return number
-function vim.fn.assert_false(actual, msg) end
+function vim.fn.foldclosed(lnum) end
 
--- This asserts number and |Float| values.  When {actual}  is lower
--- 		than {lower} or higher than {upper} an error message is added
--- 		to |v:errors|.  Also see |assert-return|.
--- 		When {msg} is omitted an error in the form
--- 		"Expected range {lower} - {upper}, but got {actual}" is
--- 		produced.
+-- Create or replace or add to the quickfix list.
+--
+-- 		When {what} is not present, use the items in {list}.  Each
+-- 		item must be a dictionary.  Non-dictionary items in {list} are
+-- 		ignored.  Each dictionary item can contain the following
+-- 		entries:
+--
+-- 		    bufnr	buffer number; must be the number of a valid
+-- 				buffer
+-- 		    filename	name of a file; only used when "bufnr" is not
+-- 				present or it is invalid.
+-- 		    module	name of a module; if given it will be used in
+-- 				quickfix error window instead of the filename
+-- 		    lnum	line number in the file
+-- 		    pattern	search pattern used to locate the error
+-- 		    col		column number
+-- 		    vcol	when non-zero: "col" is visual column
+-- 				when zero: "col" is byte index
+-- 		    nr		error number
+-- 		    text	description of the error
+-- 		    type	single-character error type, 'E', 'W', etc.
+-- 		    valid	recognized error message
+--
+-- 		The "col", "vcol", "nr", "type" and "text" entries are
+-- 		optional.  Either "lnum" or "pattern" entry can be used to
+-- 		locate a matching error line.
+-- 		If the "filename" and "bufnr" entries are not present or
+-- 		neither the "lnum" or "pattern" entries are present, then the
+-- 		item will not be handled as an error line.
+-- 		If both "pattern" and "lnum" are present then "pattern" will
+-- 		be used.
+-- 		If the "valid" entry is not supplied, then the valid flag is
+-- 		set when "bufnr" is a valid buffer or "filename" exists.
+-- 		If you supply an empty {list}, the quickfix list will be
+-- 		cleared.
+-- 		Note that the list is not exactly the same as what
+-- 		|getqflist()| returns.
+--
+-- 		{action} values:				*E927*
+-- 		'a'	The items from {list} are added to the existing
+-- 			quickfix list. If there is no existing list, then a
+-- 			new list is created.
+--
+-- 		'r'	The items from the current quickfix list are replaced
+-- 			with the items from {list}.  This can also be used to
+-- 			clear the list: >
+-- 				:call setqflist([], 'r')
+-- <
+-- 		'f'	All the quickfix lists in the quickfix stack are
+-- 			freed.
+--
+-- 		If {action} is not present or is set to ' ', then a new list
+-- 		is created. The new quickfix list is added after the current
+-- 		quickfix list in the stack and all the following lists are
+-- 		freed. To add a new quickfix list at the end of the stack,
+-- 		set "nr" in {what} to "$".
+--
+-- 		If the optional {what} dictionary argument is supplied, then
+-- 		only the items listed in {what} are set. The first {list}
+-- 		argument is ignored.  The following items can be specified in
+-- 		{what}:
+-- 		    context	quickfix list context. See |quickfix-context|
+-- 		    efm		errorformat to use when parsing text from
+-- 				"lines". If this is not present, then the
+-- 				'errorformat' option value is used.
+-- 		    id		quickfix list identifier |quickfix-ID|
+-- 		    items	list of quickfix entries. Same as the {list}
+-- 				argument.
+-- 		    lines	use 'errorformat' to parse a list of lines and
+-- 				add the resulting entries to the quickfix list
+-- 				{nr} or {id}.  Only a |List| value is supported.
+-- 		    nr		list number in the quickfix stack; zero
+-- 				means the current quickfix list and "$" means
+-- 				the last quickfix list
+-- 		    title	quickfix list title text
+-- 		Unsupported keys in {what} are ignored.
+-- 		If the "nr" item is not present, then the current quickfix list
+-- 		is modified. When creating a new quickfix list, "nr" can be
+-- 		set to a value one greater than the quickfix stack size.
+-- 		When modifying a quickfix list, to guarantee that the correct
+-- 		list is modified, "id" should be used instead of "nr" to
+-- 		specify the list.
+--
+-- 		Examples (See also |setqflist-examples|): >
+-- 		   :call setqflist([], 'r', {'title': 'My search'})
+-- 		   :call setqflist([], 'r', {'nr': 2, 'title': 'Errors'})
+-- 		   :call setqflist([], 'a', {'id':qfid, 'lines':["F1:10:L10"]})
+-- <
+-- 		Returns zero for success, -1 for failure.
+--
+-- 		This function can be used to create a quickfix list
+-- 		independent of the 'errorformat' setting.  Use a command like
+-- 		`:cc 1` to jump to the first position.
+--- @param list any[]
 --- @return number
-function vim.fn.assert_inrange(lower, upper, actual, msg) end
-
--- When {pattern} does not match {actual} an error message is
--- 		added to |v:errors|.  Also see |assert-return|.
---
--- 		{pattern} is used as with |=~|: The matching is always done
--- 		like 'magic' was set and 'cpoptions' is empty, no matter what
--- 		the actual value of 'magic' or 'cpoptions' is.
---
--- 		{actual} is used as a string, automatic conversion applies.
--- 		Use "^" and "$" to match with the start and end of the text.
--- 		Use both to match the whole text.
---
--- 		When {msg} is omitted an error in the form
--- 		"Pattern {pattern} does not match {actual}" is produced.
--- 		Example: >
--- 	assert_match('^f.*o$', 'foobar')
--- <		Will result in a string to be added to |v:errors|:
--- 	test.vim line 12: Pattern '^f.*o$' does not match 'foobar' ~
---- @return number
-function vim.fn.assert_match(pat, text, msg) end
-
--- Remove a previously placed sign in one or more buffers.  This
--- 		is similar to the |:sign-unplace| command.
---
--- 		{group} is the sign group name. To use the global sign group,
--- 		use an empty string.  If {group} is set to '*', then all the
--- 		groups including the global group are used.
--- 		The signs in {group} are selected based on the entries in
--- 		{dict}.  The following optional entries in {dict} are
--- 		supported:
--- 			buffer	buffer name or number. See |bufname()|.
--- 			id	sign identifier
--- 		If {dict} is not supplied, then all the signs in {group} are
--- 		removed.
---
--- 		Returns 0 on success and -1 on failure.
---
--- 		Examples: >
--- 			" Remove sign 10 from buffer a.vim
--- 			call sign_unplace('', {'buffer' : "a.vim", 'id' : 10})
---
--- 			" Remove sign 20 in group 'g1' from buffer 3
--- 			call sign_unplace('g1', {'buffer' : 3, 'id' : 20})
---
--- 			" Remove all the signs in group 'g2' from buffer 10
--- 			call sign_unplace('g2', {'buffer' : 10})
---
--- 			" Remove sign 30 in group 'g3' from all the buffers
--- 			call sign_unplace('g3', {'id' : 30})
---
--- 			" Remove all the signs placed in buffer 5
--- 			call sign_unplace('*', {'buffer' : 5})
---
--- 			" Remove the signs in group 'g4' from all the buffers
--- 			call sign_unplace('g4')
---
--- 			" Remove sign 40 from all the buffers
--- 			call sign_unplace('*', {'id' : 40})
---
--- 			" Remove all the placed signs from all the buffers
--- 			call sign_unplace('*')
---- @param dict dictionary
---- @return number
-function vim.fn.sign_unplace(group, dict) end
-
--- The opposite of `assert_equal()`: add an error message to
--- 		|v:errors| when {expected} and {actual} are equal.
--- 		Also see |assert-return|.
---- @return number
-function vim.fn.assert_notequal(exp, act, msg) end
-
--- The opposite of `assert_match()`: add an error message to
--- 		|v:errors| when {pattern} matches {actual}.
--- 		Also see |assert-return|.
---- @return number
-function vim.fn.assert_notmatch(pat, text, msg) end
-
--- Set the file permissions for {fname} to {mode}.
--- 		{mode} must be a string with 9 characters.  It is of the form
--- 		"rwxrwxrwx", where each group of "rwx" flags represent, in
--- 		turn, the permissions of the owner of the file, the group the
--- 		file belongs to, and other users.  A '-' character means the
--- 		permission is off, any other character means on.  Multi-byte
--- 		characters are not supported.
---
--- 		For example "rw-r-----" means read-write for the user,
--- 		readable by the group, not accessible by others.  "xx-x-----"
--- 		would do the same thing.
---
--- 		Returns non-zero for success, zero for failure.
---
--- 		To read permissions see |getfperm()|.
---- @return number
-function vim.fn.setfperm(fname, mode) end
-
--- Report a test failure directly, using {msg}.
--- 		Always returns one.
---- @return number
-function vim.fn.assert_report(msg) end
-
--- When {actual} is not true an error message is added to
--- 		|v:errors|, like with |assert_equal()|.
--- 		Also see |assert-return|.
--- 		A value is |TRUE| when it is a non-zero number or |v:true|.
--- 		When {actual} is not a number or |v:true| the assert fails.
--- 		When {msg} is omitted an error in the form "Expected True but
--- 		got {actual}" is produced.
---- @return number
-function vim.fn.assert_true(actual, msg) end
-
--- Returns information about windows as a List with Dictionaries.
---
--- 		If {winid} is given Information about the window with that ID
--- 		is returned.  If the window does not exist the result is an
--- 		empty list.
---
--- 		Without {winid} information about all the windows in all the
--- 		tab pages is returned.
---
--- 		Each List item is a Dictionary with the following entries:
--- 			botline		last displayed buffer line
--- 			bufnr		number of buffer in the window
--- 			height		window height (excluding winbar)
--- 			loclist		1 if showing a location list
--- 			quickfix	1 if quickfix or location list window
--- 			terminal	1 if a terminal window
--- 			tabnr		tab page number
--- 			topline		first displayed buffer line
--- 			variables	a reference to the dictionary with
--- 					window-local variables
--- 			width		window width
--- 			winbar		1 if the window has a toolbar, 0
--- 					otherwise
--- 			wincol		leftmost screen column of the window
--- 			winid		|window-ID|
--- 			winnr		window number
--- 			winrow		topmost screen column of the window
---- @return list
-function vim.fn.getwininfo(winid) end
-
--- Connect a socket to an address. If {mode} is "pipe" then
--- 		{address} should be the path of a named pipe. If {mode} is
--- 		"tcp" then {address} should be of the form "host:port" where
--- 		the host should be an ip adderess or host name, and port the
--- 		port number.
---
--- 		Returns a |channel| ID. Close the socket with |chanclose()|.
--- 		Use |chansend()| to send data over a bytes socket, and
--- 		|rpcrequest()| and |rpcnotify()| to communicate with a RPC
--- 		socket.
---
--- 		{opts} is a dictionary with these keys:
--- 		  |on_data| : callback invoked when data was read from socket
--- 		  data_buffered : read socket data in |channel-buffered| mode.
--- 		  rpc     : If set, |msgpack-rpc| will be used to communicate
--- 			    over the socket.
--- 		Returns:
--- 		  - The channel ID on success (greater than zero)
--- 		  - 0 on invalid arguments or connection failure.
---- @return number
-function vim.fn.sockconnect(mode, address, opts) end
-
--- Return the sound-folded equivalent of {word}.  Uses the first
--- 		language in 'spelllang' for the current window that supports
--- 		soundfolding.  'spell' must be set.  When no sound folding is
--- 		possible the {word} is returned unmodified.
--- 		This can be used for making spelling suggestions.  Note that
--- 		the method can be quite slow.
---- @return string
-function vim.fn.soundfold(word) end
+function vim.fn.setqflist(list, action, what) end
 

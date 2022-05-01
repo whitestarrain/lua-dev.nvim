@@ -26,6 +26,14 @@ function vim.deepcopy(orig) end
 --- @return any #timer luv timer object
 function vim.defer_fn(fn, timeout) end
 
+-- Display a deprecation notification to the user.
+--- @param name any #string The function that will be
+---                    deprecated.
+--- @param alternative any #string An alternative function to be used.
+--- @param version any #string The version in which the function
+---                    will be deprecated.
+function vim.deprecate(name, alternative, version) end
+
 -- Tests if `s` ends with `suffix`.
 --- @param s any #(string) a string
 --- @param suffix any #(string) a suffix
@@ -104,6 +112,9 @@ function vim.keymap.del(modes, lhs, opts) end
 ---             "silent". In addition to the options listed in
 ---             |nvim_set_keymap()|, this table also accepts the
 ---             following keys:
+---             • buffer: (number or boolean) Add a mapping to the
+---               given buffer. When "true" or 0, use the current
+---               buffer.
 ---             • replace_keycodes: (boolean, default true) When
 ---               both this and expr is "true",
 ---               |nvim_replace_termcodes()| is applied to the
